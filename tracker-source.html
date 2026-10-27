@@ -90,7 +90,7 @@
   .srow.done .nm { color: #9fd3ae; }
   .srow .tm { margin-left: auto; font-size: 12px; color: #8fae99; white-space: nowrap; }
   /* v5.35: Flip + Night moved into a top-left dropdown (Andrew's call - on the
-     Netlify build the MapLibre logo sits bottom-right, over where they were).
+     vector build the MapLibre logo sits bottom-right, over where they were).
      #menuBtn is the little square with three bars; the drop holds the two
      buttons, which keep their ids, so applyFlip/applyNight are untouched. */
   #menuWrap { position: absolute; left: 10px; top: calc(96px + var(--sat)); z-index: 1001; }
@@ -381,8 +381,8 @@ L.control.attribution({ position: 'bottomleft', prefix: false })
 // print once and clean instead of doubling over Esri's. The trade: streets outside
 // the route lose their faint names.
 // v5.34 — basemap MODE. 'raster' ships in this file: it is what the Muse artifact
-// host can serve (its content policy blocks the vector endpoints). The Netlify
-// bundle build (build-netlify.py) flips this one string to 'vector' and injects
+// host can serve (its content policy blocks the vector endpoints). The
+// deployable bundle build (build-pages.py) flips this one string to 'vector' and injects
 // the MapLibre script tags; every other byte is identical. In vector mode the base
 // is a MapLibre GL map under the Leaflet map (OpenFreeMap positron by day, CARTO
 // dark-matter at night — both free, no key, the v6 build's proven sources) with
@@ -1726,7 +1726,7 @@ map.on('click', closeMenu);
 })();
 
 // Service worker (v5.34): sw.js exists only beside the page on folder hosts
-// (the Netlify bundle). Where it isn't served — the Muse link — registration
+// (the deployable bundle). Where it isn't served — the Muse link — registration
 // 404s into the catch and the page behaves exactly as before; where it is, the
 // worker gives the tracker a true offline open.
 if ('serviceWorker' in navigator) {
