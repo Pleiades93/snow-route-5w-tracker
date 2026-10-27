@@ -36,6 +36,17 @@
     padding: 9px 10px; font-size: 14px; font-weight: 600; min-height: 40px; white-space: nowrap;
   }
   #hud button.ghost { background: #444; }
+  /* v5.54: Finish is THE end-of-clean action - red and unmistakable */
+  #hud #resetBtn { background: #c22f24; border-color: #8c1f16; font-weight: 800; }
+  #hud #resetBtn.undoing { background: #1e7a46; border-color: #14532d; }
+  #finModal { position: absolute; inset: 0; z-index: 1350; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  #finModal.hidden { display: none; }
+  #finModal .card { background: #1c1f27; color: #fff; border-radius: var(--rad-card); box-shadow: var(--shadow-card); padding: 18px; width: 100%; max-width: 420px; }
+  #finModal .ttl { font-weight: 800; font-size: 17px; margin-bottom: 8px; }
+  #finModal .fmsg { font-size: 14px; color: #cfd6dd; line-height: 1.5; margin-bottom: 14px; }
+  #finModal .frow { display: flex; gap: 10px; }
+  #finModal .frow button { flex: 1; min-height: 50px; border-radius: var(--rad-btn); border: 1px solid #444; background: #262a33; color: #fff; font-size: 15px; font-weight: 700; }
+  #finModal #finYes { background: #c22f24; border-color: #8c1f16; }
   #hud button.armed { background: #d43a2f; }
   #hud button.undoing { background: #1e9e57; }
   #hud button.on { background: #2c7be5; }
@@ -102,26 +113,41 @@
   .srow.done .dot { background: #2ecc71; }
   .srow.done .nm { color: #9fd3ae; }
   .srow .tm { margin-left: auto; font-size: 12px; color: #8fae99; white-space: nowrap; }
+  /* v5.53: list row buttons + note editor + clean detail screen */
+  .srow .nwrap { display: flex; flex-direction: column; min-width: 0; }
+  .srow .nt { font-size: 12px; color: #c9a86a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 36vw; }
+  .srow .sbtn { margin-left: 2px; width: 42px; height: 42px; flex-shrink: 0; border: 1px solid #444; border-radius: var(--rad-btn); background: #262a33; font-size: 17px; padding: 0; }
+  .noteEd { padding: 8px 4px 12px 30px; border-bottom: 1px solid #333; }
+  .noteEd textarea { width: 100%; min-height: 64px; box-sizing: border-box; background: #14161a; color: #fff; border: 1px solid #444; border-radius: var(--rad-btn); padding: 9px; font-size: 15px; font-family: inherit; }
+  .noteEd .nhint { font-size: 12px; color: #8fae99; margin-top: 5px; }
+  #cleanView { overflow-y: auto; padding: 4px 2px 14px; }
+  .cvHead { display: flex; align-items: center; gap: 8px; padding: 8px 2px; }
+  .cvHead .cvTtl { font-weight: 800; font-size: 16px; flex: 1; }
+  .cvHead button { border: 1px solid #444; background: #262a33; color: #fff; border-radius: var(--rad-btn); min-height: 40px; padding: 0 12px; font-size: 14px; font-weight: 700; }
+  .cvMeta { font-size: 13px; color: #b9c2cc; padding: 0 2px 8px; line-height: 1.5; white-space: pre-wrap; }
+  .cvRow { padding: 10px 4px; border-bottom: 1px solid #333; cursor: pointer; }
+  .cvRow .cvTop { display: flex; align-items: baseline; gap: 8px; }
+  .cvRow .cvNm { font-size: 15px; font-weight: 700; flex: 1; }
+  .cvRow .cvTm { font-size: 12px; color: #8fae99; white-space: nowrap; }
+  .cvRow .cvNt { font-size: 12px; color: #c9a86a; margin-top: 3px; }
+  .cvDet { font-size: 13px; color: #d7dde3; line-height: 1.55; padding: 6px 2px 2px; white-space: pre-wrap; }
+  .cvSec { font-weight: 800; font-size: 13px; color: #9fb4c8; padding: 12px 2px 4px; }
+  .cvDel { width: 100%; margin-top: 14px; min-height: 44px; border: 1px solid #7a3a3a; background: #4a2323; color: #fff; border-radius: var(--rad-btn); font-size: 14px; font-weight: 700; }
+  .cvDel.armed { background: #8c2f2f; }
+  .prow.histRow { cursor: pointer; }
+  .prow.histRow span:last-child { color: #7db4e8; }
   /* v5.41: Flip + Night live in a dropdown again - the hamburger (three
      bars) sits bottom-right and the drop opens UPWARD from it (Andrew's
      call; the v5.40 standalone stack lasted one build). The wrap is raised
      a little so it clears the attribution strip / MapLibre logo in that
      corner. Buttons keep their ids, so applyFlip/applyNight are untouched. */
-  #menuWrap { position: absolute; right: calc(10px + var(--sar)); bottom: calc(30px + var(--sab)); z-index: 1001; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-  #menuBtn {
-    width: 46px; height: 46px; border: none; border-radius: 12px; cursor: pointer;
-    background: var(--card-op); box-shadow: var(--shadow-float);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
-  }
-  #menuBtn i { display: block; width: 22px; height: 3px; border-radius: 2px; background: #fff; }
-  #menuDrop { display: flex; flex-direction: column; gap: 8px; }
-  #menuDrop.hidden { display: none; }
-  #menuDrop button {
-    min-height: 48px; min-width: 132px; padding: 12px 16px; border: none; border-radius: var(--rad-btn); cursor: pointer;
-    background: var(--card-op); color: #fff; font-size: 15px; font-weight: 600; text-align: left;
-    box-shadow: var(--shadow-float);
-  }
-  #menuDrop button.on { background: #6b4fd8; }
+  /* v5.52: gentle motion on the pieces that appear - dropdown + banners.
+     (The List sheet already slides and the street panel already fades.)
+     Transform/opacity only, so nothing shifts layout; reduced-motion off. */
+  @keyframes dropIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes bannerIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  #suggest:not(.hidden), #stale:not(.hidden) { animation: bannerIn .2s ease-out; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
   /* Flip: the whole map (base tiles, streets, labels, GPS) rotates 180 degrees as one
      rigid piece, so geography and the split halves stay exact; the street-name labels
      are counter-rotated in applyFlip so they stay readable and street-aligned. */
@@ -133,18 +159,32 @@
   #gpsBtn.paused { background: #f5a623; color: #fff; }
   button { touch-action: manipulation; transition: transform .08s ease; }
   button:active { transform: scale(.97); }   /* v5.48: native-feeling press feedback */
-  #gpsBtn {
-    position: absolute; left: calc(10px + var(--sal)); bottom: calc(16px + var(--sab)); z-index: 1000;
-    width: 50px; height: 50px; border-radius: 50%; border: none;
-    background: #fff; font-size: 23px; box-shadow: var(--shadow-float);
-  }
-  #homeBtn {
-    position: absolute; left: calc(68px + var(--sal)); bottom: calc(16px + var(--sab)); z-index: 1000;
-    width: 50px; height: 50px; border-radius: 50%; border: none;
-    background: #fff; font-size: 21px; box-shadow: var(--shadow-float);
-  }
+  /* v5.59: radial icon fan (Andrew) - five circular icon buttons arc
+     up-left around the gear on a ~165px radius, cascading out from it;
+     no words, and every button follows the day/night theme */
+  #fanWrap { position: absolute; right: calc(10px + var(--sar)); bottom: calc(30px + var(--sab)); z-index: 1001; width: 46px; height: 46px; }
+  #fanBtns { position: absolute; right: 0; bottom: 0; width: 46px; height: 46px; pointer-events: none; }
+  .fanItem { position: absolute; right: -2px; bottom: -2px; width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; background: #fff; color: #22262e; font-size: 22px; box-shadow: var(--shadow-float); opacity: 0; visibility: hidden; transform: translate(0, 0) scale(.5); pointer-events: none; transition: opacity .22s ease, transform .26s cubic-bezier(.33,.9,.35,1), visibility 0s .5s, background .18s ease, color .18s ease; }
+  /* v5.61: closing runs the fan-out stagger in reverse (farthest folds first) */
+  .fanItem:nth-of-type(1) { transition-delay: 0ms; }
+  .fanItem:nth-of-type(2) { transition-delay: 45ms; }
+  .fanItem:nth-of-type(3) { transition-delay: 90ms; }
+  .fanItem:nth-of-type(4) { transition-delay: 135ms; }
+  .fanItem:nth-of-type(5) { transition-delay: 180ms; }
+  body.night .fanItem { background: #22262e; color: #f2f4f8; }
+  .fanItem.on, body.night .fanItem.on { background: #6b4fd8; color: #fff; }
+  #updBtn { font-size: 31px; font-weight: 700; }   /* v5.62: bigger update arrow (Andrew) */
+  #fanBtns.open .fanItem { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .22s ease, transform .26s cubic-bezier(.33,.9,.35,1), background .18s ease, color .18s ease; }
+  #fanBtns.open .fanItem:nth-of-type(5) { transform: translate(-165px, 0) scale(1); transition-delay: 0ms; }
+  #fanBtns.open .fanItem:nth-of-type(4) { transform: translate(-152px, -63px) scale(1); transition-delay: 45ms; }
+  #fanBtns.open .fanItem:nth-of-type(3) { transform: translate(-117px, -117px) scale(1); transition-delay: 90ms; }
+  #fanBtns.open .fanItem:nth-of-type(2) { transform: translate(-63px, -152px) scale(1); transition-delay: 135ms; }
+  #fanBtns.open .fanItem:nth-of-type(1) { transform: translate(0, -165px) scale(1); transition-delay: 180ms; }
+  #gearBtn { width: 46px; height: 46px; border: none; border-radius: 12px; cursor: pointer; background: #fff; color: #22262e; font-size: 23px; box-shadow: var(--shadow-float); }
+  body.night #gearBtn { background: #22262e; color: #f2f4f8; }
+  #gearBtn.on { background: #2c7be5; color: #fff; }
   .leaflet-bottom.leaflet-left .leaflet-control-attribution {
-    margin: 0 0 calc(4px + var(--sab)) calc(68px + var(--sal)); font-size: 9px; background: rgba(255,255,255,.7);
+    margin: 0 0 calc(4px + var(--sab)) calc(10px + var(--sal)); font-size: 9px; background: rgba(255,255,255,.7);
   }
   body.night .leaflet-control-attribution { background: rgba(20,23,29,.7); color: #9aa4b2; }
   .roadLabel { background: transparent; border: none; box-shadow: none; padding: 0; }
@@ -209,12 +249,12 @@
 <div id="map"></div>
 <div id="hud">
   <div class="row">
-    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.51</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
+    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.62</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
     <div class="count" id="count"></div>
     <div class="spacer"></div>
-    <button class="ghost" id="resetBtn">Reset</button>
-    <button class="ghost" id="paceBtn">Pace &#9662;</button>
     <button id="listBtn">List</button>
+    <button class="ghost" id="paceBtn">Pace &#9662;</button>
+    <button id="resetBtn">Finish</button>
   </div>
   <div id="bar"><div id="barFill"></div></div>
   <div id="stats" class="hidden"></div>
@@ -226,14 +266,15 @@
   <div id="selStatus">Tap a street on the map</div>
   <button id="selBtn" disabled>Mark completed</button>
 </div>
-<button id="gpsBtn" title="My location">&#128205;</button>
-<button id="homeBtn" title="Back to route">&#127968;</button>
-<div id="menuWrap">
-  <div id="menuDrop" class="hidden">
-    <button id="flipBtn">Flip</button>
-    <button id="nightBtn">Night</button>
+<div id="fanWrap">
+  <div id="fanBtns">
+    <button class="fanItem" id="updBtn" title="Update app">&#10227;</button>
+    <button class="fanItem" id="flipBtn" title="Flip map">&#128259;</button>
+    <button class="fanItem" id="nightBtn" title="Night mode">&#127769;</button>
+    <button class="fanItem" id="homeBtn" title="Back to route">&#127968;</button>
+    <button class="fanItem" id="gpsBtn" title="My location">&#128205;</button>
   </div>
-  <button id="menuBtn" aria-label="Map options"><i></i><i></i><i></i></button>
+  <button id="gearBtn" title="Settings and map tools">&#9881;</button>
 </div>
 <div id="spd" class="hidden"></div>
 <div id="suggest" class="hidden"><span id="sugText"></span><button id="sugYes">Show street</button><button id="sugNo">Not yet</button></div>
@@ -244,6 +285,14 @@
   <div id="sheetHead">Streets<button id="exportBtn">Export</button><button id="sheetClose">Close</button></div>
   <div id="filters"><button data-f="all" class="on">All</button><button data-f="todo">To do</button><button data-f="done">Done</button></div>
   <div id="streetList"></div>
+  <div id="cleanView" class="hidden"></div>
+</div>
+<div id="finModal" class="hidden">
+  <div class="card">
+    <div class="ttl">Finish this clean?</div>
+    <div class="fmsg" id="finMsg"></div>
+    <div class="frow"><button id="finNo">No</button><button id="finYes">Yes, finish</button></div>
+  </div>
 </div>
 <div id="xport" class="hidden">
   <div class="card">
@@ -819,8 +868,32 @@ $('selBtn').addEventListener('click', () => {
 });
 // ===== STREET LIST (All / To do / Done) =====
 let listFilter = 'all';
+// ===== LIST + PER-STREET NOTES (v5.53) =====
+// Andrew's design: the row's map jump moved to its own pin button; tapping
+// the name or the note button opens the note editor. One text note per street
+// per clean, AUTO-SAVED as he types (debounced + on blur) - no Save button.
+// Notes live in the existing notes object, so Reset's archive snapshot files
+// them with the clean and clears them for the next one.
+let noteOpenFor = null;
+let noteSaveTimer = 0;
+function noteEntry(n) { return (Array.isArray(notes[n]) ? notes[n] : []).find(f => f.k === 'note'); }
+function noteTextOf(n) { const e = noteEntry(n); return e && typeof e.text === 'string' ? e.text : ''; }
+function setNoteText(n, txt) {
+  const t = (txt || '').trim();
+  const arr = Array.isArray(notes[n]) ? notes[n].slice() : [];
+  const i = arr.findIndex(f => f.k === 'note');
+  if (!t) { if (i >= 0) arr.splice(i, 1); }
+  else if (i >= 0) { arr[i] = Object.assign({}, arr[i], { text: t, at: new Date().toISOString() }); }
+  else arr.push({ k: 'note', at: new Date().toISOString(), text: t });
+  if (arr.length) notes[n] = arr; else delete notes[n];
+  saveAux();
+}
 function renderList() {
   const el = $('streetList');
+  // Preserve an in-progress note across re-renders (a street getting marked,
+  // a GPS update): the editor's live text wins over the last saved value.
+  const openEd = el.querySelector('.noteEd textarea');
+  const draft = openEd ? openEd.value : null;
   el.innerHTML = '';
   const arr = names.filter(n => listFilter === 'all' || (listFilter === 'done') === doneSet.has(n));
   if (listFilter === 'done') arr.sort((a, b) => String(doneTimes[b] || '').localeCompare(String(doneTimes[a] || '')));
@@ -833,17 +906,43 @@ function renderList() {
   arr.forEach(n => {
     const d = document.createElement('div');
     d.className = 'srow' + (doneSet.has(n) ? ' done' : '') + (MAIN.has(n) ? ' main' : '');
-    d.innerHTML = '<div class="dot"></div><div class="nm"></div><div class="tm"></div>';
+    d.innerHTML = '<div class="dot"></div><div class="nwrap"><div class="nm"></div><div class="nt"></div></div><div class="tm"></div><button class="sbtn smap" title="Show on map">\u{1F4CD}</button>';
     d.querySelector('.nm').textContent = n;
+    const ntEl = d.querySelector('.nt');
+    const paintNt = () => { const t = noteTextOf(n); ntEl.textContent = t ? '\u{1F4DD} ' + t : ''; ntEl.style.display = t ? '' : 'none'; };
+    paintNt();
     const doneAt = doneSet.has(n) && doneTimes[n] ? fmtWhen(doneTimes[n]) : '';
-    d.querySelector('.tm').textContent = (notes[n] && notes[n].length ? '\u2691 ' : '') + (doneAt ? 'done ' + doneAt + ' (' + fmtAgo(doneTimes[n]) + ')' : '');
-    d.onclick = () => {
+    d.querySelector('.tm').textContent = (notes[n] && notes[n].some(f => f.k !== 'note') ? '\u2691 ' : '') + (doneAt ? 'done ' + doneAt + ' (' + fmtAgo(doneTimes[n]) + ')' : '');
+    d.querySelector('.smap').onclick = (e) => {
+      e.stopPropagation();
       select(n);
       pauseFollow();   // a deliberate look at another street must not be yanked back by the next GPS fix
       $('sheet').classList.remove('open');
       map.flyToBounds(streets[n].bounds, { padding: [45, 45], maxZoom: 17 });
     };
+    const toggleNote = () => {
+      noteOpenFor = noteOpenFor === n ? null : n;
+      renderList();
+      const ta = el.querySelector('.noteEd textarea');
+      if (ta) ta.focus();
+    };
+    d.onclick = toggleNote;   // v5.55 (Andrew): pressing the street itself opens its note - no note button. The pin stops propagation, so it keeps its own job.
     el.appendChild(d);
+    if (noteOpenFor === n) {
+      const ed = document.createElement('div');
+      ed.className = 'noteEd';
+      ed.innerHTML = '<textarea placeholder="Note for this street \u2014 e.g. driveway at #12 could not be cleaned, car blocking"></textarea><div class="nhint">Saves automatically</div>';
+      const ta = ed.querySelector('textarea');
+      ta.value = draft !== null ? draft : noteTextOf(n);
+      const hint = ed.querySelector('.nhint');
+      ta.addEventListener('input', () => {
+        hint.textContent = 'Saving\u2026';
+        clearTimeout(noteSaveTimer);
+        noteSaveTimer = setTimeout(() => { setNoteText(n, ta.value); paintNt(); hint.textContent = 'Saved \u2713'; }, 400);
+      });
+      ta.addEventListener('blur', () => { clearTimeout(noteSaveTimer); setNoteText(n, ta.value); paintNt(); });
+      el.appendChild(ed);
+    }
   });
 }
 document.querySelectorAll('#filters button').forEach(b => {
@@ -854,10 +953,10 @@ document.querySelectorAll('#filters button').forEach(b => {
   };
 });
 $('listBtn').onclick = () => $('sheet').classList.toggle('open');
-$('sheetClose').onclick = () => $('sheet').classList.remove('open');
+$('sheetClose').onclick = () => { $('sheet').classList.remove('open'); closeClean(); };
 
 // ===== EXPORT (proof of work you can get OUT of the phone) =====
-function flagText(n) { return (Array.isArray(notes[n]) ? notes[n] : []).map(f => (FLAGS[f.k] || f.k) + (f.at ? ' ' + fmtClock(new Date(f.at)) : '')).join('; '); }
+function flagText(n) { return (Array.isArray(notes[n]) ? notes[n] : []).map(f => f.k === 'note' ? ('\u{1F4DD} ' + (f.text || '')) : (FLAGS[f.k] || f.k) + (f.at ? ' ' + fmtClock(new Date(f.at)) : '')).join('; '); }
 function buildReport() {
   const byTime = m => (a, b) => String(m[a] || '').localeCompare(String(m[b] || ''));
   const ts = [...doneSet].map(n => Date.parse(doneTimes[n])).filter(t => !isNaN(t)).sort((a, b) => a - b);
@@ -872,10 +971,10 @@ function buildReport() {
   const todo = names.filter(n => !doneSet.has(n));
   if (todo.length) L2.push('', 'Not done: ' + todo.join(', '));
   const fl = names.filter(n => notes[n] && notes[n].length);
-  if (fl.length) { L2.push('', 'Flags:'); fl.forEach(n => L2.push(n + ' \u2014 ' + flagText(n))); }
+  if (fl.length) { L2.push('', 'Notes & flags:'); fl.forEach(n => L2.push(n + ' \u2014 ' + flagText(n))); }
   history.slice().reverse().forEach(h => {
     const items = h.items || {}, ks = Object.keys(items).sort(byTime(items));
-    L2.push('', 'Archived run (reset ' + fmtStamp(h.at) + ', ' + ks.length + ' streets' + (h.startedAt ? ', started ' + fmtStamp(h.startedAt) : '') + (h.km ? ', ' + h.km + ' km' : '') + ')');
+    L2.push('', 'Archived run (finished ' + fmtStamp(h.at) + ', ' + ks.length + ' streets' + (h.startedAt ? ', started ' + fmtStamp(h.startedAt) : '') + (h.km ? ', ' + h.km + ' km' : '') + ')');
     ks.forEach(n => L2.push(n + ', ' + (items[n] ? fmtStamp(items[n]) : '(no time)') + ((h.via || {})[n] === 'gps' ? ' (GPS-verified)' : '')));
   });
   return L2.join('\n');
@@ -1031,13 +1130,13 @@ const resetBtn = $('resetBtn');
 function disarmReset() {
   resetArmed = false;
   if (resetArmTimer) { clearTimeout(resetArmTimer); resetArmTimer = null; }
-  if (!resetUndo) { resetBtn.textContent = 'Reset'; resetBtn.classList.remove('armed'); }
+  if (!resetUndo) { resetBtn.textContent = 'Finish'; resetBtn.classList.remove('armed'); }
 }
 function clearUndo() {
   resetUndo = null; resetUndoCov = null;
   if (resetUndoTimer) { clearTimeout(resetUndoTimer); resetUndoTimer = null; }
   resetBtn.classList.remove('undoing');
-  if (!resetArmed) { resetBtn.textContent = 'Reset'; resetBtn.classList.remove('armed'); }
+  if (!resetArmed) { resetBtn.textContent = 'Finish'; resetBtn.classList.remove('armed'); }
 }
 resetBtn.onclick = () => {
   if (resetUndo) {   // inside the undo window: restore the archived run
@@ -1058,18 +1157,21 @@ resetBtn.onclick = () => {
       saveCov();
     }
     refreshAll(); saveAll(); saveHistory();
-    showToast('Reset undone');
+    showToast('Finish undone');
     return;
   }
-  if (!resetArmed) {
-    resetArmed = true;
-    resetBtn.textContent = 'Sure?';
-    resetBtn.classList.add('armed');
-    resetArmTimer = setTimeout(disarmReset, 5000);
-    return;
-  }
-  performReset();
+  // v5.54: Finish asks in a Yes/No pop-up - the button itself never changes
+  // to ask. The message states exactly what will be saved, including the
+  // honest warning when a short run clears without being saved.
+  const nDone = doneSet.size, nNotes = Object.keys(notes).length;
+  $('finMsg').textContent = (nDone || nNotes)
+    ? (nDone + ' of ' + TOTAL + ' streets cleaned' + (nNotes ? ', notes on ' + nNotes + ' street' + (nNotes === 1 ? '' : 's') : '') + '. The clean is saved to Previous cleans with its notes, and the board clears for the next clean.' + (nDone < 3 ? ' Careful: under 3 streets, so this will clear WITHOUT being saved.' : ''))
+    : 'Nothing is marked yet. Finishing just clears the board - nothing will be saved.';
+  $('finModal').classList.remove('hidden');
 };
+$('finNo').onclick = () => $('finModal').classList.add('hidden');
+$('finYes').onclick = () => { $('finModal').classList.add('hidden'); performReset(); };
+$('finModal').addEventListener('click', (e) => { if (e.target === $('finModal')) $('finModal').classList.add('hidden'); });
 // Archive (when the run qualifies) and clear the live state. The archive write is verified
 // BEFORE anything is cleared — see the safe-archive block inside.
 function performReset() {
@@ -1113,13 +1215,13 @@ function performReset() {
   refreshAll(); saveAll(); saveHistory();
   if (archiving) {
     resetUndo = snap;
-    resetBtn.textContent = 'Undo reset';
+    resetBtn.textContent = 'Undo';   // v5.55: 'Undo finish' (88px min-content) overflowed the header row and pushed List off-screen - 'Undo' matches Finish's footprint
     resetBtn.classList.remove('armed');
     resetBtn.classList.add('undoing');
     resetUndoTimer = setTimeout(clearUndo, 8000);
-    showToast('Run archived \u2014 tap Undo reset within 8 s to restore');
+    showToast('Clean saved \u2014 tap Undo within 8 s to restore it');
   } else if (snap) {
-    showToast('Run cleared \u2014 too short to archive (under 3 streets)');
+    showToast('Board cleared \u2014 too short to save as a clean (under 3 streets)');
   }
 }
 
@@ -1245,7 +1347,7 @@ function applyNight() {
   document.body.classList.toggle('night', nightOn);
   setBasemap();
   nightBtn.classList.toggle('on', nightOn);
-  nightBtn.textContent = nightOn ? 'Night: ON' : 'Night';
+  nightBtn.textContent = nightOn ? '☀️' : '🌙';   /* v5.59: sun in night mode, moon in day - the glyph shows where a tap goes */
   names.forEach(styleStreet);
 }
 nightBtn.addEventListener('click', () => {
@@ -1505,7 +1607,7 @@ function renderPace(P) {
     if (!P.cur.count) rows.push(row('Full route at that pace', fmtDur(totalLen * P.ref.msPerM)));
   } else if (P.cur.count) {
     rows.push('<div class="psec">Last clean</div>');
-    rows.push('<div class="phint">No earlier clean recorded yet. After a run, Reset archives it \u2014 next time out, your ETA and pace are scored against it.</div>');
+    rows.push('<div class="phint">No earlier clean recorded yet. After a run, Finish saves it \u2014 next time out, your ETA and pace are scored against it.</div>');
   }
   rows.push('<div class="psec phist" id="histHead">Previous cleans ' + (histOpen ? '\u25b2' : '\u25bc') + '</div>');
   if (histOpen) {
@@ -1513,10 +1615,10 @@ function renderPace(P) {
     for (let i = history.length - 1; i >= 0; i--) {
       const d = histDur(history[i]);
       if (!d) continue;
-      rows.push(row(fmtWhen(history[i].at), fmtDur(d.durMs) + ' \u00b7 ' + d.count + ' of ' + TOTAL + ' streets'));
+      rows.push('<div class="prow histRow" data-i="' + i + '"><span>' + fmtWhen(history[i].at) + '</span><span>' + fmtDur(d.durMs) + ' \u00b7 ' + d.count + ' of ' + TOTAL + ' streets \u203a</span></div>');
       shownH++;
     }
-    if (!shownH) rows.push('<div class="phint">No cleans archived yet \u2014 when you finish a run and tap Reset, it lands here with its total time.</div>');
+    if (!shownH) rows.push('<div class="phint">No cleans saved yet \u2014 when you finish a run and tap Finish, it lands here with its total time.</div>');
   }
   if (P.verdict) {
     rows.push('<div class="psec">Pace vs last clean</div>');
@@ -1529,12 +1631,117 @@ function renderPace(P) {
     rows.push('<div class="psec">Pace vs last clean</div>');
     rows.push('<div class="phint">Mark one more street and I can score your pace against last clean.</div>');
   }
-  if (!rows.length) rows.push('<div class="phint">No pace data yet \u2014 mark a street to start your ETA. After a run, Reset archives it as your last clean, and this panel scores every run against it.</div>');
+  if (!rows.length) rows.push('<div class="phint">No pace data yet \u2014 mark a street to start your ETA. After a run, Finish saves it as your last clean, and this panel scores every run against it.</div>');
   el.innerHTML = rows.join('');
   const sb = $('startBtn'); if (sb) sb.onclick = startRun;
   const cb = $('cancelStartBtn'); if (cb) cb.onclick = cancelStart;
   const hh = $('histHead'); if (hh) hh.onclick = () => { histOpen = !histOpen; renderPace(paceInfo()); };
+  el.querySelectorAll('.histRow').forEach(r => { r.onclick = () => openClean(+r.dataset.i); });
 }
+// ===== CLEAN DETAIL (v5.53) =====
+// One archived clean, full screen inside the sheet: totals, its streets in
+// the order they were marked with per-street times, every note it carries, a
+// group for noted-but-not-cleaned streets, and a two-tap DELETE (Andrew's
+// ask - test cleans should not clutter the list). Per-street "time taken" is
+// the gap from the previous street's mark (or the run start for the first) -
+// that is what the archived times actually prove, and the header says so.
+let cleanIdx = null, cleanDelArmed = false, cleanDelTimer = 0;
+function cleanNoteLines(entries) {
+  return (Array.isArray(entries) ? entries : []).map(f => f.k === 'note' ? ('\u{1F4DD} ' + (f.text || '')) : ((FLAGS[f.k] || f.k) + (f.at ? ' ' + fmtClock(new Date(f.at)) : '')));
+}
+function openClean(i) {
+  const h = history[i];
+  if (!h) return;
+  cleanIdx = i; cleanDelArmed = false;
+  closePace(); deselect();
+  $('filters').style.display = 'none';
+  $('streetList').style.display = 'none';
+  const cv = $('cleanView');
+  cv.classList.remove('hidden');
+  cv.innerHTML = '';
+  const head = document.createElement('div'); head.className = 'cvHead';
+  head.innerHTML = '<button class="cvBack">\u2039 Back</button><div class="cvTtl"></div>';
+  head.querySelector('.cvTtl').textContent = 'Clean \u2014 ' + fmtWhen(h.at);
+  head.querySelector('.cvBack').onclick = backToCleans;
+  cv.appendChild(head);
+  const d = histDur(h);
+  const meta = document.createElement('div'); meta.className = 'cvMeta';
+  meta.textContent = (d ? ('Total time ' + fmtDur(d.durMs) + ' \u00b7 ') : '') + (h.items ? Object.keys(h.items).length : 0) + ' streets' + (h.km ? (' \u00b7 ' + h.km + ' km of GPS trail') : '') + (h.startedAt ? (' \u00b7 started ' + fmtClock(new Date(h.startedAt))) : '') + '\nTime taken per street = from the previous street (or the start). Tap a street for its details.';
+  cv.appendChild(meta);
+  const items = h.items || {};
+  const order = Object.keys(items).filter(n => isStreet(n)).sort((x, y) => String(items[x] || '9999').localeCompare(String(items[y] || '9999')));
+  let prev = h.startedAt ? Date.parse(h.startedAt) : NaN;
+  order.forEach(n => {
+    const t = items[n] ? Date.parse(items[n]) : NaN;
+    const dur = (!isNaN(t) && !isNaN(prev)) ? t - prev : NaN;
+    if (!isNaN(t)) prev = t;
+    const rowEl = document.createElement('div'); rowEl.className = 'cvRow';
+    const top = document.createElement('div'); top.className = 'cvTop';
+    top.innerHTML = '<div class="cvNm"></div><div class="cvTm"></div>';
+    top.querySelector('.cvNm').textContent = n;
+    top.querySelector('.cvTm').textContent = (!isNaN(t) ? fmtClock(new Date(t)) : '\u2014') + (!isNaN(dur) ? (' \u00b7 took ' + fmtDur(dur)) : '');
+    rowEl.appendChild(top);
+    const lines = cleanNoteLines((h.notes || {})[n]);
+    if (lines.length) { const p = document.createElement('div'); p.className = 'cvNt'; p.textContent = lines[0] + (lines.length > 1 ? ' (+' + (lines.length - 1) + ' more)' : ''); rowEl.appendChild(p); }
+    const det = document.createElement('div'); det.className = 'cvDet'; det.style.display = 'none';
+    const parts = [];
+    parts.push('Marked: ' + (items[n] ? fmtWhen(items[n]) : 'no time recorded'));
+    if (!isNaN(dur)) parts.push('Time taken: ' + fmtDur(dur) + ' (from the previous street or the start)');
+    if ((h.via || {})[n]) parts.push('How: ' + ((h.via || {})[n] === 'gps' ? 'GPS suggestion' : 'marked by tap'));
+    lines.forEach(L => parts.push(L));
+    det.textContent = parts.join('\n');
+    rowEl.appendChild(det);
+    rowEl.onclick = () => { det.style.display = det.style.display === 'none' ? '' : 'none'; };
+    cv.appendChild(rowEl);
+  });
+  const notedOnly = Object.keys(h.notes || {}).filter(n => isStreet(n) && !(n in items) && (h.notes[n] || []).length);
+  if (notedOnly.length) {
+    const sec = document.createElement('div'); sec.className = 'cvSec'; sec.textContent = 'Notes on streets not cleaned'; cv.appendChild(sec);
+    notedOnly.forEach(n => {
+      const rowEl = document.createElement('div'); rowEl.className = 'cvRow';
+      const top = document.createElement('div'); top.className = 'cvTop';
+      top.innerHTML = '<div class="cvNm"></div>';
+      top.querySelector('.cvNm').textContent = n;
+      rowEl.appendChild(top);
+      cleanNoteLines(h.notes[n]).forEach(L => { const p = document.createElement('div'); p.className = 'cvNt'; p.textContent = L; rowEl.appendChild(p); });
+      cv.appendChild(rowEl);
+    });
+  }
+  const del = document.createElement('button'); del.className = 'cvDel'; del.textContent = 'Delete this clean';
+  del.onclick = () => {
+    if (!cleanDelArmed) {
+      cleanDelArmed = true; del.classList.add('armed'); del.textContent = 'Tap again to confirm delete';
+      clearTimeout(cleanDelTimer);
+      cleanDelTimer = setTimeout(() => { cleanDelArmed = false; del.classList.remove('armed'); del.textContent = 'Delete this clean'; }, 5000);
+      return;
+    }
+    clearTimeout(cleanDelTimer);
+    history.splice(cleanIdx, 1);
+    saveHistory();
+    backToCleans();   // v5.54 fix: land back on Previous cleans, not the Streets list
+    showToast('Clean deleted');
+    updateStats();
+  };
+  cv.appendChild(del);
+  $('sheet').classList.add('open');
+}
+function backToCleans() {
+  // The clean detail is only ever entered from Previous cleans - so Back and
+  // Delete both return there, with the section expanded and freshly rendered.
+  closeClean();
+  $('sheet').classList.remove('open');
+  histOpen = true;
+  openPace();
+}
+function closeClean() {
+  cleanIdx = null;
+  const cv = $('cleanView');
+  if (cv) cv.classList.add('hidden');
+  const f = $('filters'); if (f) f.style.display = '';
+  const sl = $('streetList'); if (sl) sl.style.display = '';
+  if (typeof renderList === 'function') renderList();
+}
+
 function startRun() { runStart = Date.now(); saveStart(); syncWake(); updateStats(); if (paceOpen) renderPace(paceInfo()); showToast('Clock started \u2014 the run is timed from now'); }
 function cancelStart() { runStart = 0; saveStart(); updateStats(); if (paceOpen) renderPace(paceInfo()); showToast('Start cleared'); }
 
@@ -1598,7 +1805,7 @@ function applyFlip() {
     s.style.transform = flipped ? 'rotate(180deg)' : '';
   });
   flipBtn.classList.toggle('on', flipped);
-  flipBtn.textContent = flipped ? 'Flip: ON' : 'Flip';
+  flipBtn.textContent = '🔃';   /* v5.59: icon only - the purple .on background carries the state */
   refreshAll();
   if (flipped) {
     map.dragging.disable(); map.touchZoom.disable(); map.doubleClickZoom.disable();
@@ -1617,12 +1824,15 @@ flipBtn.addEventListener('click', () => {
 // v5.41 dropdown wiring (menu back, bottom-right): the hamburger toggles the
 // drop; choosing an item runs it (its own handler above) and closes the drop;
 // a tap on the map closes it.
-const menuBtn = $('menuBtn'), menuDrop = $('menuDrop');
-function closeMenu() { menuDrop.classList.add('hidden'); }
-menuBtn.addEventListener('click', () => { if (tapGuard('menu')) return; menuDrop.classList.toggle('hidden'); });
-flipBtn.addEventListener('click', closeMenu);
-nightBtn.addEventListener('click', closeMenu);
-map.on('click', closeMenu);
+// ===== SETTINGS FAN (v5.58) =====
+// Andrew: ONE corner control, bottom right. The old hamburger menu is gone;
+// its items (Flip, Night, Update app) live in this fan with the pin and
+// home. Using an item leaves the fan OPEN (v5.61, Andrew - he may want to
+// switch straight back); it folds only on a second gear tap or a map tap.
+const fanBtns = $('fanBtns'), gearBtn = $('gearBtn');
+function closeFan() { fanBtns.classList.remove('open'); gearBtn.classList.remove('on'); }
+gearBtn.addEventListener('click', () => { if (tapGuard('gear')) return; const open = fanBtns.classList.toggle('open'); gearBtn.classList.toggle('on', open); });
+map.on('click', closeFan);
 (function () {
   const el = map.getContainer(), pts = new Map();
   let pinchBase = 0, panMoved = 0;
@@ -1657,6 +1867,65 @@ map.on('click', closeMenu);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
 }
+
+// ===== APP UPDATE CHECK (v5.52) =====
+// Andrew's ask: an Update button in the menu that pulls the newest GitHub
+// build NOW instead of waiting for iOS to notice, and CONFIRMS the result.
+// iOS checks for a new worker lazily; registration.update() forces the check,
+// and the worker already skipWaiting + clients.claim, so a found update takes
+// over on the reload below. The verdict comes from the served page itself:
+// fetch it with a cache-busting query (which also stops the worker's offline
+// fallback from answering with the cached copy and faking a verdict), read
+// its version label, compare with the running one. GitHub's edge cache can
+// serve the old copy for ~10 minutes after a push - then the honest answer
+// is that the server still shows the old version, which the comparison
+// produces naturally.
+let updBusy = false;
+async function checkForUpdate() {
+  if (updBusy) return;
+  updBusy = true;
+  showToast('Checking for updates\u2026');
+  const cur = ($('ver') ? $('ver').textContent : '').trim();
+  try {
+    if ('serviceWorker' in navigator) {
+      // Best-effort only: a registration probe that itself fails (blocked
+      // worker, non-secure context) must never sink the version check below.
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) { try { await reg.update(); } catch (e) {} }
+      } catch (e) {}
+    }
+    const res = await fetch(location.pathname + '?u=' + Date.now(), { cache: 'no-store' });
+    if (!res || !res.ok) throw new Error('fetch');
+    const html = await res.text();
+    const m = html.match(/id="ver">([^<]+)</);
+    if (!m) throw new Error('nover');
+    const remote = m[1].trim();
+    if (remote !== cur) {
+      try { sessionStorage.setItem('snow5w.updatedTo', remote); } catch (e) {}
+      showToast('Update found \u2014 ' + remote + ' \u2014 reloading\u2026');
+      setTimeout(() => location.reload(), 600);
+    } else {
+      showToast('You are up to date \u2014 ' + cur);
+      updBusy = false;
+    }
+  } catch (e) {
+    showToast('Could not check for updates \u2014 no connection, or the server did not answer');
+    updBusy = false;
+  }
+}
+$('updBtn').addEventListener('click', () => { if (tapGuard('upd')) return; checkForUpdate(); });
+// Post-reload confirmation: the flag set above survives the reload in
+// sessionStorage; report against the version actually running now, and never
+// loop - a mismatch is reported once, honestly.
+try {
+  const u = sessionStorage.getItem('snow5w.updatedTo');
+  if (u) {
+    sessionStorage.removeItem('snow5w.updatedTo');
+    const now = ($('ver') ? $('ver').textContent : '').trim();
+    setTimeout(() => showToast(now === u ? ('Updated to ' + u + ' \u2713') : 'Update did not take yet \u2014 GitHub may still be serving the old copy; try again in a few minutes'), 900);
+  }
+} catch (e) {}
 
 // ===== OFFLINE MAP PREP (v5.42) =====
 // One time only, a few seconds after the first online load, the route area's
