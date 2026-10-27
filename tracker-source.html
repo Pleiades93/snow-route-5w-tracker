@@ -425,7 +425,7 @@ function setBasemap() {
   if (BASEMAP_MODE === 'vector' && !glFailed && window.maplibregl && L.maplibreGL) {
     try {
       tileLayer.clearLayers();
-      const layer = L.maplibreGL({ style: GL_STYLES[isNight() ? 'night' : 'day'], attribution: '\u00a9 OpenFreeMap \u00a9 OpenMapTiles \u00a9 CARTO' });
+      const layer = L.maplibreGL({ style: GL_STYLES[isNight() ? 'night' : 'day'], attribution: '\u00a9 OpenFreeMap \u00a9 OpenMapTiles \u00a9 CARTO', attributionControl: false });   // v5.45: no MapLibre credits BAR across the bottom (Andrew) - the map runs edge to edge; the credits ride in the small bottom-left chip instead
       glLayer = layer;
       tileLayer.addLayer(layer);
       const gl = layer.getMaplibreMap();
