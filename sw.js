@@ -1,10 +1,10 @@
-// Route 5W service worker (v5.50, Leaflet build): lets the page open with NO
+// Route 5W service worker (v5.51, Leaflet build): lets the page open with NO
 // signal, and re-uses map data already fetched (vector styles/tiles/glyphs from
 // OpenFreeMap + CARTO, Esri fallback tiles, CDN libraries). Host this file in
 // the SAME folder as index.html, over https. Without it the page still works
 // online. Pattern carried from the v6 worker; the activate step deletes the
 // v6 worker's caches (snow5w-v6, snow5w-tiles-v2) so no stale v6 page survives.
-const CACHE = 'snow5w-shell-v550', TILES = 'snow5w-tiles-v3', MAX_TILES = 3000;
+const CACHE = 'snow5w-shell-v551', TILES = 'snow5w-tiles-v3', MAX_TILES = 3000;
 // SEC-1 (external audit, 2026-10-27): the library files are cached ONLY
 // through integrity-checked fetches. The old c.add(url) stored ANY ok
 // response - a captive-portal page cached as leaflet.js would then be
@@ -40,7 +40,7 @@ async function netFirst(r, cacheName) {   // fresh when the network answers fast
   try { res = await Promise.race([fp, new Promise((_, j) => setTimeout(() => j(new Error('slow')), 3500))]); }
   catch (e) { try { res = await fp; } catch (e2) { netErr = true; } }   // SEC-7: a slow network is still a network - wait for the real answer before surrendering to cache/error
   try {
-    if (res && res.ok) { c.put(r, res.clone()); return res; }
+    if (res && res.ok) { try { await c.put(r, res.clone()); } catch (e) {} return res; }   // NEW-02 (audit 5): awaited + caught like cacheFirst - a failed cache write must never sink a good response or escape as an unhandled rejection
     // Server answered with an error status (503 etc.): prefer a good cached copy
     // (BUG-03, ChatGPT audit #2) - surface the error only when nothing is cached.
     // The app-shell fallback applies ONLY to page navigations (ISSUE-03,

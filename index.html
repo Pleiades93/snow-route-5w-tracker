@@ -209,7 +209,7 @@
 <div id="map"></div>
 <div id="hud">
   <div class="row">
-    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.50</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
+    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.51</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
     <div class="count" id="count"></div>
     <div class="spacer"></div>
     <button class="ghost" id="resetBtn">Reset</button>
@@ -936,7 +936,7 @@ function doRestore() {
         // ISSUE-05 (audit 2): legacy format - the completion set was once an
         // object map (street -> time). Migrate to the modern array, same rule
         // the loader applies, so legitimate old backups still restore.
-        v = JSON.stringify(Object.keys(pv).filter(nm => pv[nm] && ROADS[nm]));
+        v = JSON.stringify(Object.keys(pv).filter(nm => pv[nm] && isStreet(nm)));   // NEW-03 (audit 5): isStreet, not ROADS[nm] - the same own-property rule as the loaders, so inherited names (constructor, __proto__) never migrate
       } else if (shape === 'arr' ? !Array.isArray(pv) : !(pv && typeof pv === 'object' && !Array.isArray(pv))) { showToast('Backup value for ' + k + ' has the wrong shape \u2014 nothing was changed'); return; }
     }
     entries.push([k, v]);
@@ -946,7 +946,12 @@ function doRestore() {
   // Any failure rolls the snapshot back in: a restore is all-or-nothing, never a
   // mixed state (the old code wrote key-by-key and reloaded regardless).
   const snap = {};
-  backupKeys().forEach(k => { snap[k] = localStorage.getItem(k); });
+  let snapOk = true;
+  backupKeys().forEach(k => { try { snap[k] = localStorage.getItem(k); } catch (e) { snapOk = false; } });
+  // ISSUE-02 (audit 5): if the current data cannot even be READ for
+  // safekeeping, do not start - a restore without a trustworthy snapshot
+  // cannot promise its all-or-nothing rollback, so nothing is written.
+  if (!snapOk) { showToast('Restore stopped \u2014 your current data could not be read for safekeeping, so nothing was changed'); return; }
   // ISSUE-02 (audits 2 + 3): rollback is VERIFIED by reading every key back.
   // The old version assumed the rollback worked and said so; on a double
   // failure the message lied. Now the report matches what actually happened.
@@ -954,13 +959,15 @@ function doRestore() {
     let okBack = true;
     backupKeys().forEach(k => {
       try { if (snap[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, snap[k]); } catch (e) {}
-      if (localStorage.getItem(k) !== snap[k]) okBack = false;
+      try { if (localStorage.getItem(k) !== snap[k]) okBack = false; } catch (e) { okBack = false; }   // ISSUE-02 (audit 5): an unreadable key is NOT a verified rollback
     });
     return okBack;
   };
   for (const pair of entries) {
     const k = pair[0], v = pair[1];
-    if (!lsSet(k, v) || localStorage.getItem(k) !== v) {
+    let wrote = false;
+    try { wrote = lsSet(k, v) && localStorage.getItem(k) === v; } catch (e) { wrote = false; }   // ISSUE-02 (audit 5): a verification read that throws is a failed verification, never an escaping exception
+    if (!wrote) {
       if (rollback()) showToast('Restore failed while writing ' + k + ' \u2014 your current data was put back, nothing was changed');
       else showToast('Restore failed while writing ' + k + ' \u2014 and your previous data could NOT be fully put back. Restore from a known-good backup');
       return;
@@ -995,7 +1002,14 @@ $('xClr').onclick = () => {
     return;
   }
   clearTimeout(clrTimer); clrArmed = false; $('xClr').textContent = 'Clear trail';
-  trail = []; drawTrail(); saveTrail(); updateStats(); showToast('Trail cleared');
+  trail = []; drawTrail();
+  // NEW-01 (audit 5): the clear is a storage write like any other - if it
+  // fails, the stored trail still holds every point and would resurrect on
+  // the next load. Say so honestly and keep the clear pending (trailDirty)
+  // so the normal flush cycle persists it when storage recovers.
+  if (saveTrail()) { trailDirty = false; lastTrailSave = Date.now(); showToast('Trail cleared'); }
+  else { trailDirty = true; showToast('Trail cleared on screen, but saving failed \u2014 will keep retrying'); }
+  updateStats();
   if (xMode === 'gpx') showX('gpx');
 };
 $('xCopy').onclick = () => {
@@ -1395,7 +1409,7 @@ function checkStale() {
 // starts existed). Single source for refRun and the Previous cleans list.
 function histDur(h) {
   const items = (h && h.items) || {};
-  const ks = Object.keys(items).filter(n => ROADS[n] && items[n]);
+  const ks = Object.keys(items).filter(n => isStreet(n) && items[n]);   // NEW-03 (audit 5): uniform with the loaders
   const ts = ks.map(n => Date.parse(items[n])).filter(t => !isNaN(t)).sort((x, y) => x - y);
   if (!ts.length) return null;
   const stA = Date.parse(h.startedAt);
