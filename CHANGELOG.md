@@ -4,6 +4,36 @@ User-facing changes and important reliability fixes. Versions are the
 in-app labels (header, under "Route 5W"). This changelog starts at v5.47;
 earlier history is in the git log.
 
+## v5.76 — 2026-10-27
+- The GPS follows the run (Andrew): pressing Start clean turns
+  positioning on, and Finish turns it off - no manual toggling.
+  Undoing a finish turns it back on; cancelling a start turns off
+  only a GPS the start itself turned on.
+- The red-button rule now covers the whole exit family (Andrew):
+  Cancel start, the finish pop-up's No, Not yet, Not now, Keep, and
+  the previous-clean view's Back are red too, not just Close.
+
+## v5.75 — 2026-10-27
+- Every Close button is now red (Andrew): in the Export panel all the
+  buttons looked the same and the way out got lost. The List sheet's
+  Close and the Export panel's Close use the app's street red.
+
+## v5.74 — 2026-10-27
+- Map pictures load while you pan instead of only after you stop
+  (they used to start from zero at every stop), and the Export panel
+  gains "Download route maps (offline)": one tap saves every map
+  picture covering the route - day and night styles - to the phone,
+  so panning the route in the field never waits on the network and
+  the map works with no signal. The panel reports how many files
+  were saved.
+
+## v5.73 — 2026-10-27
+- No more map flicker on zoom (Andrew's report): the map pictures
+  themselves used to fade in one by one as they downloaded at a new
+  zoom level, which read as flickering. The fade is off on both map
+  styles now - a picture appears at full strength the moment it is
+  ready, and the previous zoom's picture holds solid until then.
+
 ## v5.72 — 2026-10-27
 - Instant zoom (Andrew's pick after trying the alternatives): the
   zoom's snap animation is off, so when you let go of a pinch the new

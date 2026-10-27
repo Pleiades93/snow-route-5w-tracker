@@ -98,6 +98,10 @@
   #sheetHead { display: flex; align-items: center; gap: 8px; padding: 8px calc(14px + var(--sar)) 6px calc(14px + var(--sal)); font-weight: 700; font-size: 15px; }
   #sheetHead button { background: #444; color: #fff; border: none; border-radius: var(--rad-btn); padding: 8px 14px; font-size: 14px; font-weight: 600; min-height: 40px; }
   #sheetHead #exportBtn { margin-left: auto; background: #2c7be5; }
+  /* v5.75 (Andrew): every Close button is RED - in the Export panel all the
+     buttons looked the same and the way out got lost. The app's own street
+     red, so it reads as the same visual language as the map. */
+  #sheetHead #sheetClose { background: #e63a2e; }
   #filters { display: flex; gap: 8px; padding: 4px calc(14px + var(--sar)) 8px calc(14px + var(--sal)); }
   #filters button { flex: 1; background: #2c3440; color: #cbd2dc; border: none; border-radius: var(--rad-btn); padding: 9px 0; font-size: 14px; font-weight: 600; min-height: 40px; }
   #filters button.on { background: #fff; color: #14161c; }
@@ -224,6 +228,14 @@
   #xport .xrow { display: flex; gap: 8px; margin-top: 10px; }
   #xport .xrow button { flex: 1; min-height: 48px; border: none; border-radius: var(--rad-btn); background: #444; color: #fff; font-size: 15px; font-weight: 600; }
   #xport .xrow button.pri { background: #2c7be5; }
+  #xport #xClose { background: #e63a2e; }   /* v5.75: red Close (Andrew) */
+  /* v5.76 (Andrew): the red rule covers the whole exit family - not just
+     buttons named Close, but anything that backs out, cancels, declines
+     or dismisses. The do-it buttons (Yes / Show street / Save backup /
+     Archive & start new) keep their colours; only the way-out is red. */
+  #finModal #finNo { background: #e63a2e; border-color: #8c1f16; }
+  #hud #cancelStartBtn { background: #e63a2e; border-color: #8c1f16; color: #fff; }
+  .cvHead .cvBack { background: #e63a2e; border-color: #8c1f16; }
   #stats { font-size: 12px; color: #aab4c2; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
   #pacePanel { display: grid; grid-template-rows: 1fr; font-size: 13px; color: #c9d3e0; line-height: 1.45; transition: grid-template-rows .25s ease; }   /* v5.65: the List sheet's exact recipe, mirrored to the top - full-height sweep, .25s ease, no fade */
   #pacePanel.hidden { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows .25s ease, visibility 0s .25s; }
@@ -244,24 +256,24 @@
   #suggest.hidden { display: none; }
   #suggest span { flex: 1; font-weight: 700; font-size: 15px; }
   #suggest button { min-height: 48px; border: none; border-radius: var(--rad-btn); padding: 0 14px; font-size: 15px; font-weight: 700; color: #fff; background: #1e9e57; }
-  #suggest #sugNo { background: #444; }
+  #suggest #sugNo { background: #e63a2e; }   /* v5.76: red exit family (Andrew) */
   #stale { position: absolute; left: calc(10px + var(--sal)); right: calc(10px + var(--sar)); bottom: calc(74px + var(--sab)); z-index: 1001; background: var(--card-op); color: #fff; border-radius: var(--rad-card); padding: 10px 12px; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-card); }
   #stale.hidden { display: none; }
   #stale span { flex: 1; font-weight: 700; font-size: 15px; }
   #stale button { min-height: 48px; border: none; border-radius: var(--rad-btn); padding: 0 14px; font-size: 15px; font-weight: 700; color: #fff; background: #1e9e57; }
-  #stale #staleNo { background: #444; }
+  #stale #staleNo { background: #e63a2e; }   /* v5.76: red exit family (Andrew) */
   #bakNudge { position: absolute; left: calc(10px + var(--sal)); right: calc(10px + var(--sar)); bottom: calc(74px + var(--sab)); z-index: 1002; background: var(--card-op); color: #fff; border-radius: var(--rad-card); padding: 10px 12px; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-card); }
   #bakNudge.hidden { display: none; }
   #bakNudge span { flex: 1; font-weight: 700; font-size: 15px; }
   #bakNudge button { min-height: 48px; border: none; border-radius: var(--rad-btn); padding: 0 14px; font-size: 15px; font-weight: 700; color: #fff; background: #1e9e57; white-space: nowrap; }
-  #bakNudge #bakLater { background: #444; }
+  #bakNudge #bakLater { background: #e63a2e; }   /* v5.76: red exit family (Andrew) */
 </style>
 </head>
 <body>
 <div id="map"></div>
 <div id="hud">
   <div class="row">
-    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.72</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
+    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.76</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
     <div class="count" id="count"></div>
     <div class="spacer"></div>
     <button id="listBtn">List</button>
@@ -314,6 +326,8 @@
     <div class="xrow"><button id="xShare" class="pri">Share</button><button id="xCopy">Copy</button><button id="xClose">Close</button></div>
     <div class="xrow"><button id="xSum">Summary</button><button id="xGpx">GPX trail</button><button id="xClr">Clear trail</button></div>
     <div class="xrow"><button id="xBak">Backup (JSON)</button><button id="xRes">Restore</button><button id="xImp" class="pri" style="display:none">Import backup</button></div>
+    <div class="xrow"><button id="xPre">Download route maps (offline)</button></div>
+    <div id="xPreStat" style="margin-top:8px;font-size:13px;color:#cbd2dc"></div>
   </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
@@ -475,7 +489,13 @@ names.forEach(n => { let L2 = 0; ROADS[n].forEach(sg => { for (let i = 1; i < sg
 // in the same frame it is released: labels and trims recompute in that same
 // frame via zoomend, so there is no in-between state at all. Zooms jump
 // instead of gliding; pans and GPS follow are unaffected (separate system).
-const map = L.map('map', { zoomControl: false, attributionControl: false, zoomAnimation: false });
+const map = L.map('map', { zoomControl: false, attributionControl: false, zoomAnimation: false, fadeAnimation: false });
+// v5.73 (Andrew's call 2026-10-27): fadeAnimation OFF (above). With instant
+// zoom the names and roads land immediately; the only remaining flicker was
+// the map pictures themselves - Leaflet fades each tile in as it downloads,
+// so a fresh zoom level shimmered tile by tile. With the fade off, a tile
+// shows at full strength the moment it is ready and the stretched old tile
+// holds solid until then: blur -> sharp instead of flicker.
 // Attribution lives bottom-left (clear of the buttons) and is NOT tied to the tile layer, so it stays
 // visible at all times.
 L.control.attribution({ position: 'bottomleft', prefix: false })
@@ -499,7 +519,12 @@ L.control.attribution({ position: 'bottomleft', prefix: false })
 const BASEMAP_MODE = 'raster';
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
 function esriLayer(path, nativeZoom) {
-  return L.tileLayer(ESRI + path + '/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: nativeZoom });
+  // v5.74: updateWhenIdle OFF - by default on phones the layer waits for the
+  // pan to stop before asking for the newly revealed tiles, so every stop
+  // started loading from zero. Now tiles load while the pan is still moving
+  // (the layer's own 200 ms move throttle keeps it sane) and are mostly
+  // there when the finger lifts.
+  return L.tileLayer(ESRI + path + '/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: nativeZoom, updateWhenIdle: false });
 }
 const BASEMAPS = {
   day:   [['Canvas/World_Light_Gray_Base', 16]],
@@ -529,7 +554,7 @@ function setBasemap() {
   if (BASEMAP_MODE === 'vector' && !glFailed && window.maplibregl && L.maplibreGL) {
     try {
       tileLayer.clearLayers();
-      const layer = L.maplibreGL({ style: GL_STYLES[isNight() ? 'night' : 'day'], attribution: '\u00a9 OpenFreeMap \u00a9 OpenMapTiles \u00a9 CARTO', attributionControl: false });   // v5.45: no MapLibre credits BAR across the bottom (Andrew) - the map runs edge to edge; the credits ride in the small bottom-left chip instead
+      const layer = L.maplibreGL({ style: GL_STYLES[isNight() ? 'night' : 'day'], attribution: '\u00a9 OpenFreeMap \u00a9 OpenMapTiles \u00a9 CARTO', attributionControl: false, fadeDuration: 0 });   // v5.73: no fade on the vector build either (Andrew's flicker fix)   // v5.45: no MapLibre credits BAR across the bottom (Andrew) - the map runs edge to edge; the credits ride in the small bottom-left chip instead
       glLayer = layer;
       tileLayer.addLayer(layer);
       const gl = layer.getMaplibreMap();
@@ -1029,6 +1054,7 @@ function showX(mode) {
   else if (mode === 'restore') { ta.value = ''; $('xTitle').textContent = 'Restore \u2014 paste a backup here, then tap Import backup'; }
   else { ta.value = buildReport(); $('xTitle').textContent = 'Snow log'; }
   $('xShare').style.display = navigator.share ? '' : 'none';
+  preloadStatus();
   $('xport').classList.remove('hidden');
   ta.scrollTop = 0;
 }
@@ -1102,6 +1128,88 @@ function doRestore() {
   showToast('Backup restored \u2014 reloading');
   setTimeout(() => location.reload(), 600);
 }
+// ===== ROUTE MAP PRELOAD (v5.74, Andrew's call 2026-10-27) =====
+// Downloads every map picture covering the route area (route + 400 m, the
+// allowedBounds box) into the service worker's tile cache, so panning the
+// route in the field never waits on the network - and the map works with
+// no signal at all. Raster set: the Esri day + night bases, zooms 12-16
+// (16 is Esri's native cap; deeper zooms upscale those). In vector mode it
+// also warms the GL styles' own assets: style JSONs, sprites, the glyph
+// ranges for the styles' font stacks, and vector tiles up to each source's
+// max zoom. Raster pictures load as images - the same way the map itself
+// loads them, so they pass the artifact host's policy and the worker
+// caches them identically; GL assets load with fetch. Every file is
+// best-effort: the panel reports the honest saved/total count. The record
+// is device-local bookkeeping, deliberately NOT in backupKeys().
+const LS_PRELOAD_KEY = 'snow5w.v5.preload';
+function tileXY(lat, lng, z) {
+  const n = Math.pow(2, z), r = lat * Math.PI / 180;
+  return [Math.floor((lng + 180) / 360 * n), Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n)];
+}
+function tilesFor(b, z) {
+  const nw = tileXY(b.getNorth(), b.getWest(), z), se = tileXY(b.getSouth(), b.getEast(), z), out = [];
+  for (let x = nw[0]; x <= se[0]; x++) for (let y = nw[1]; y <= se[1]; y++) out.push([z, x, y]);
+  return out;
+}
+async function buildPreloadList() {
+  const urls = new Set(), b = allowedBounds;
+  Object.values(BASEMAPS).forEach(list => list.forEach(([path]) => {
+    for (let z = 12; z <= 16; z++) tilesFor(b, z).forEach(([zz, x, y]) => urls.add(ESRI + path + '/MapServer/tile/' + zz + '/' + y + '/' + x));
+  }));
+  if (BASEMAP_MODE === 'vector') {
+    for (const styleUrl of Object.values(GL_STYLES)) {
+      try {
+        const st = await (await fetch(styleUrl)).json();
+        urls.add(styleUrl);
+        if (st.sprite) ['.json', '.png', '@2x.json', '@2x.png'].forEach(sfx => urls.add(st.sprite + sfx));
+        const stacks = new Set();
+        (st.layers || []).forEach(l => { const f = l.layout && l.layout['text-font']; if (Array.isArray(f) && f.length) stacks.add(f.join(',')); });
+        if (st.glyphs) stacks.forEach(fs2 => [0, 256, 512, 768, 8192].forEach(start =>
+          urls.add(st.glyphs.replace('{fontstack}', fs2.split(',').map(encodeURIComponent).join(',')).replace('{range}', start + '-' + (start + 255)))));
+        Object.values(st.sources || {}).forEach(src => {
+          (src.tiles || []).forEach(tpl => {
+            const mz = Math.min(src.maxzoom || 14, 14);
+            for (let z = 10; z <= mz; z++) tilesFor(b, z).forEach(([zz, x, y]) =>
+              urls.add(tpl.replace('{z}', zz).replace('{x}', x).replace('{y}', y)));
+          });
+        });
+      } catch (e) { /* style unreachable: the raster set still downloads */ }
+    }
+  }
+  return [...urls];
+}
+function fetchOne(url) {
+  if (url.includes('server.arcgisonline.com')) return new Promise(res => {
+    const img = new Image();
+    img.onload = () => res(true); img.onerror = () => res(false);
+    img.src = url;
+  });
+  return fetch(url).then(r => !!r && (r.ok || r.type === 'opaque')).catch(() => false);
+}
+let preloading = false;
+async function doPreload() {
+  if (preloading) return;
+  preloading = true;
+  const btn = $('xPre'), stat = $('xPreStat');
+  btn.disabled = true;
+  stat.textContent = 'Working out the route\u2019s map pictures\u2026';
+  const urls = await buildPreloadList();
+  let done = 0, ok = 0, next = 0;
+  const worker = async () => { while (next < urls.length) { const u = urls[next++]; if (await fetchOne(u)) ok++; done++; if (done % 10 === 0 || done === urls.length) stat.textContent = 'Downloading route maps\u2026 ' + done + ' / ' + urls.length; } };
+  await Promise.all([worker(), worker(), worker(), worker(), worker(), worker()]);
+  try { localStorage.setItem(LS_PRELOAD_KEY, JSON.stringify({ at: new Date().toISOString(), ok, total: urls.length })); } catch (e) {}
+  const kept = 'serviceWorker' in navigator && !!navigator.serviceWorker.controller;
+  stat.textContent = 'Route maps: ' + ok + ' of ' + urls.length + ' saved' + (ok < urls.length ? ' \u2014 some failed (connection?); tap to try again' : '') +
+    (kept ? '.' : '. This copy has no offline storage, so they are not kept here \u2014 the installed app keeps them.');
+  btn.disabled = false; preloading = false;
+  showToast(ok === urls.length ? 'Route maps saved for offline use' : 'Route maps partly saved \u2014 see the Export panel');
+}
+function preloadStatus() {
+  const stat = $('xPreStat'); if (!stat) return;
+  const rec = loadJSON(LS_PRELOAD_KEY, null);
+  stat.textContent = rec && rec.at ? 'Route maps: ' + rec.ok + ' of ' + rec.total + ' saved ' + fmtStamp(rec.at) + '.' : '';
+}
+$('xPre').onclick = doPreload;
 $('xBak').onclick = () => showX('backup');
 $('xRes').onclick = () => showX('restore');
 $('xImp').onclick = doRestore;
@@ -1203,7 +1311,7 @@ function disarmReset() {
   if (!resetUndo) { resetBtn.textContent = 'Finish'; resetBtn.classList.remove('armed'); }
 }
 function clearUndo() {
-  resetUndo = null; resetUndoCov = null;
+  resetUndo = null; resetUndoCov = null; gpsUndoOn = false;   // v5.76: the undo window closing forgets the GPS restore too
   if (resetUndoTimer) { clearTimeout(resetUndoTimer); resetUndoTimer = null; }
   resetBtn.classList.remove('undoing');
   if (!resetArmed) { resetBtn.textContent = 'Finish'; resetBtn.classList.remove('armed'); }
@@ -1212,6 +1320,7 @@ resetBtn.onclick = () => {
   if (resetUndo) {   // inside the undo window: restore the archived run
     const snap = resetUndo;
     const covSnap = resetUndoCov;   // capture before clearUndo() nulls it
+    const gpsSnap = gpsUndoOn;   // v5.76: same capture - clearUndo() forgets the GPS flag too
     clearUndo();
     history = history.filter(h => h.at !== snap.at);
     doneSet = new Set(Object.keys(snap.items));
@@ -1227,6 +1336,8 @@ resetBtn.onclick = () => {
       saveCov();
     }
     refreshAll(); saveAll(); saveHistory();
+    if (gpsSnap && navigator.geolocation) { follow = true; startWatch(); syncWake(); gpsBtnState(); }   // v5.76: undoing the finish restarts the GPS the finish turned off
+    gpsUndoOn = false;
     showToast('Finish undone');
     hideBakNudge();
     return;
@@ -1284,6 +1395,7 @@ function performReset() {
   dismissed.clear(); Object.keys(sugAt).forEach(k => delete sugAt[k]);
   suggestQueue = []; suggestShown = null; $('suggest').classList.add('hidden');
   refreshAll(); saveAll(); saveHistory();
+  gpsRunEnd();   // v5.76: a finished clean disengages the GPS (Andrew)
   if (archiving) {
     resetUndo = snap;
     resetBtn.textContent = 'Undo';   // v5.55: 'Undo finish' (88px min-content) overflowed the header row and pushed List off-screen - 'Undo' matches Finish's footprint
@@ -1428,6 +1540,21 @@ function stopWatch() {
   if (gpsRing) { map.removeLayer(gpsRing); gpsRing = null; }
   $('spd').classList.add('hidden');
   syncWake(); gpsBtnState();
+}
+// v5.76 (Andrew): the GPS follows the run - Start clean turns positioning
+// ON, Finish turns it OFF, so it never needs toggling by hand for a clean.
+// gpsAuto marks a watch the run itself started: cancelling the start then
+// restores the exact pre-start state, while a watch Andrew turned on by
+// hand before starting is left running by Cancel. Finish still turns the
+// GPS off either way - a finished clean disengages it, however it came on.
+let gpsAuto = false, gpsUndoOn = false;
+function gpsRunStart() {
+  if (watchId === null && navigator.geolocation) { gpsAuto = true; follow = true; startWatch(); syncWake(); gpsBtnState(); }
+}
+function gpsRunEnd() {
+  gpsUndoOn = watchId !== null;
+  gpsAuto = false;
+  if (watchId !== null) stopWatch();
 }
 gpsBtn.addEventListener('click', () => {
   if (tapGuard('gps')) return;
@@ -1865,8 +1992,8 @@ function closeClean() {
   if (typeof renderList === 'function') renderList();
 }
 
-function startRun() { runStart = Date.now(); saveStart(); syncWake(); updateStats(); if (paceOpen) renderPace(paceInfo()); showToast('Clock started \u2014 the run is timed from now'); }
-function cancelStart() { runStart = 0; saveStart(); updateStats(); if (paceOpen) renderPace(paceInfo()); showToast('Start cleared'); }
+function startRun() { runStart = Date.now(); saveStart(); syncWake(); updateStats(); if (paceOpen) renderPace(paceInfo()); showToast('Clock started \u2014 the run is timed from now'); gpsRunStart(); }
+function cancelStart() { runStart = 0; saveStart(); updateStats(); if (paceOpen) renderPace(paceInfo()); showToast('Start cleared'); if (gpsAuto) { gpsAuto = false; if (watchId !== null) stopWatch(); } }
 
 function openPace() {
   deselect();
