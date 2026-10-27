@@ -29,7 +29,6 @@ from a phone in a truck, in the dark, with gloves-adjacent tapping and spotty si
 | `index.html` | The deployable build: vector basemap (OpenFreeMap by day, CARTO dark at night) via MapLibre GL under Leaflet, with automatic fallback to Esri raster tiles if the vector source fails. This is what GitHub Pages serves. |
 | `sw.js` | Service worker for the deployable build: offline open + tile caching. Must sit beside `index.html` on an https host. |
 | `tracker-source.html` | The canonical source build (raster basemap mode). Same app, same features; the two builds differ by one mode string plus the MapLibre tags. |
-| `v6-index.html`, `v6-sw.js` | The retired v6 experiment (full MapLibre rewrite), kept for reference. |
 
 ## Running it
 
