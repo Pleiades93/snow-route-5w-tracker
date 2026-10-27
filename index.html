@@ -262,7 +262,7 @@
 <div id="map"></div>
 <div id="hud">
   <div class="row">
-    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.69</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
+    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.72</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
     <div class="count" id="count"></div>
     <div class="spacer"></div>
     <button id="listBtn">List</button>
@@ -469,7 +469,16 @@ const streetLen = {}; let totalLen = 0;
 names.forEach(n => { let L2 = 0; ROADS[n].forEach(sg => { for (let i = 1; i < sg.length; i++) L2 += dist(sg[i - 1], sg[i]); }); streetLen[n] = L2; totalLen += L2; });
 
 // ===== MAP =====
-const map = L.map('map', { zoomControl: false, attributionControl: false });
+// v5.72 (Andrew's call 2026-10-27): zoomAnimation OFF. With the snap animation
+// on, a pinch zoom ends with a 250 ms animated settle, and the zoom-dependent
+// restyles (label size, junction trims) can only safely land at the very end
+// of it - the visible "adjusts a beat later" (and pre-applying them at
+// animation start glitched: drawn for the destination while the view was
+// still stretching - v5.71, reverted). With the animation off, a zoom applies
+// in the same frame it is released: labels and trims recompute in that same
+// frame via zoomend, so there is no in-between state at all. Zooms jump
+// instead of gliding; pans and GPS follow are unaffected (separate system).
+const map = L.map('map', { zoomControl: false, attributionControl: false, zoomAnimation: false });
 // Attribution lives bottom-left (clear of the buttons) and is NOT tied to the tile layer, so it stays
 // visible at all times.
 L.control.attribution({ position: 'bottomleft', prefix: false })

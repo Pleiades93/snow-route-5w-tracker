@@ -4,6 +4,15 @@ User-facing changes and important reliability fixes. Versions are the
 in-app labels (header, under "Route 5W"). This changelog starts at v5.47;
 earlier history is in the git log.
 
+## v5.72 — 2026-10-27
+- Instant zoom (Andrew's pick after trying the alternatives): the
+  zoom's snap animation is off, so when you let go of a pinch the new
+  zoom is simply there - street names and road shapes are final in
+  the same instant, with no glitch and no late adjustment. Zooms
+  jump instead of gliding; panning and GPS follow are unchanged.
+  (v5.71 tried pre-setting the sizes as the zoom started and glitched
+  on release; reverted the same day.)
+
 ## v5.69 — 2026-10-27
 - GPS follow smoothing: fixes are filtered (poor-accuracy gate, jitter
   deadband when barely moving, short-window average) into one accepted
