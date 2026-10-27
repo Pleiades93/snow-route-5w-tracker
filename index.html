@@ -27,6 +27,8 @@
   }
   #hud .row { display: flex; align-items: center; gap: 8px; }
   #hud .title { font-weight: 700; font-size: 17px; white-space: nowrap; }
+  #hud .titleStack { display: flex; flex-direction: column; }
+  #hud .ver { font-size: 9px; font-weight: 600; color: #8fa0b3; line-height: 1; margin-top: 2px; letter-spacing: .04em; }
   #hud .count { font-size: 14px; color: #cfe8d8; white-space: nowrap; }
   #hud .spacer { margin-left: auto; }
   #hud button {
@@ -38,6 +40,16 @@
   #hud button.undoing { background: #1e9e57; }
   #hud button.on { background: #2c7be5; }
   @media (max-width: 430px) { #hud .title { font-size: 16px; } #hud .count { font-size: 13px; } #hud button { font-size: 13px; padding: 9px 8px; } }
+  /* v5.50 (Andrew): in the INSTALLED app only, iOS paints a treated, blurred
+     band at the very top of the window that washes over the header's first
+     row (present on v5.48 and v5.49, Safari clear). Drop the whole header
+     content below it there, solid colour above; every other shell keeps the
+     tight layout. #info/#warn sit relative to the header, so they drop too. */
+  @media (display-mode: standalone) {
+    #hud { padding-top: calc(50px + var(--sat)); }
+    #info { top: calc(146px + var(--sat)); }
+    #warn { top: calc(146px + var(--sat)); }
+  }
   #bar { height: 5px; background: #3a3f47; border-radius: 3px; margin-top: 8px; overflow: hidden; }
   #barFill { height: 100%; width: 0%; background: #2ecc71; transition: width .3s; }
   #warn {
@@ -197,7 +209,7 @@
 <div id="map"></div>
 <div id="hud">
   <div class="row">
-    <div class="title">Route 5W</div>
+    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.50</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
     <div class="count" id="count"></div>
     <div class="spacer"></div>
     <button class="ghost" id="resetBtn">Reset</button>
