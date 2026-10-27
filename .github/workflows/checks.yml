@@ -19,3 +19,15 @@ jobs:
           node-version: '20'
       - name: Service worker tests
         run: node tests/sw.test.mjs
+  browser-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Locate Chrome
+        run: echo "CHROME_BIN=$(command -v google-chrome || command -v chromium || command -v chromium-browser)" >> "$GITHUB_ENV"
+      - name: Browser tests (deterministic drives)
+        run: node tests/browser/run.mjs
