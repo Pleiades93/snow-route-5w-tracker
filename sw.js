@@ -1,10 +1,10 @@
-// Route 5W service worker (v5.42, Leaflet build): lets the page open with NO
+// Route 5W service worker (v5.43, Leaflet build): lets the page open with NO
 // signal, and re-uses map data already fetched (vector styles/tiles/glyphs from
 // OpenFreeMap + CARTO, Esri fallback tiles, CDN libraries). Host this file in
 // the SAME folder as index.html, over https. Without it the page still works
 // online. Pattern carried from the v6 worker; the activate step deletes the
 // v6 worker's caches (snow5w-v6, snow5w-tiles-v2) so no stale v6 page survives.
-const CACHE = 'snow5w-shell-v542', TILES = 'snow5w-tiles-v3', MAX_TILES = 3000;
+const CACHE = 'snow5w-shell-v543', TILES = 'snow5w-tiles-v3', MAX_TILES = 3000;
 const CORE = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
