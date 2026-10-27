@@ -4,6 +4,34 @@ User-facing changes and important reliability fixes. Versions are the
 in-app labels (header, under "Route 5W"). This changelog starts at v5.47;
 earlier history is in the git log.
 
+## v5.69 — 2026-10-27
+- GPS follow smoothing: fixes are filtered (poor-accuracy gate, jitter
+  deadband when barely moving, short-window average) into one accepted
+  position; the blue dot glides between fixes instead of teleporting,
+  and follow now pans gently — the map holds still while you are in the
+  middle of the screen and tracks from the edge, Waze-style.
+
+## v5.68 — 2026-10-27
+- Settings fan and gear icons switched to the bold filled family
+  (Set C) at Andrew's call, superseding v5.67's line set before the
+  GitHub push: solid gear, map pin, house, moon/sun, circular flip
+  arrows, and a solid download arrow for Update.
+
+## v5.67 — 2026-10-27
+- Settings fan and gear: every icon is now one consistent Apple-style
+  line-icon family (drawn icons in the SF Symbols spirit) — gear,
+  location crosshair, home, moon/sun, flip arrows, and a download tray
+  for Update — Andrew's picks (Set B icons, T1 text).
+- Text: SF Pro (the iPhone system font) now applies everywhere,
+  including the street names on the map (previously a different font).
+
+## v5.66 — 2026-10-27
+- Backup safety prompts: after a clean is saved, a banner offers a one-tap
+  backup export (share sheet / file download). On open, when saved cleans
+  exist and the last export is over a week old — or has never happened —
+  the banner offers a fresh copy; "Not now" snoozes it for a week. Exports
+  made from the Export panel are recorded too.
+
 ## v5.65 — 2026-10-27
 - Pace panel animation now exactly matches the List sheet's — a full-height
   sweep with the same timing in both directions, no fade.
