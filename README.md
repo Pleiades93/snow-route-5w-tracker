@@ -19,8 +19,8 @@ truck, in the dark, with gloves-adjacent tapping and spotty signal.
   that looks covered is *offered*, never auto-marked), a snow log with per-clean
   GPS paths, and full backup / restore.
 - Flip mode rotates the whole map 180° for starting from the far end; night mode
-  for plowing in the dark. Flip and Night live in the ☰ menu, **bottom right**,
-  which opens upward.
+  for plowing in the dark. Flip, Night, the location pin, home and the app-update
+  check live in the ⚙ settings fan at the **bottom right**.
 - Progress is stored **on the device only** (browser local storage). There is no
   server and no account; the backup/restore export is the way to move data.
 - Offline: after the first online open, the app quietly saves the route area's
@@ -49,25 +49,39 @@ truck, in the dark, with gloves-adjacent tapping and spotty signal.
 
 | File | What it is |
 |---|---|
-| `index.html` | The deployable build: vector basemap (OpenFreeMap by day, CARTO dark at night) via MapLibre GL under Leaflet, with automatic fallback to Esri raster tiles if the vector source fails. This is what GitHub Pages serves. |
-| `sw.js` | Service worker for the deployable build: offline open + tile caching. Must sit beside `index.html` on an https host. |
-| `tracker-source.html` | The canonical source build (raster basemap mode). Same app, same features; see *Build & parity* below. |
+| `src/tracker-source.html` | **The canonical application source — the only file where the app itself is edited** (raster basemap mode). Same app, same features as the deployment; see *Build & parity* below. |
+| `src/sw.js` | The authored service worker source (offline open + tile caching). Edited here; copied to the root by the build. |
+| `index.html` | **Generated** deployable build: vector basemap (OpenFreeMap by day, CARTO dark at night) via MapLibre GL under Leaflet, with automatic fallback to Esri raster tiles if the vector source fails. This is what GitHub Pages serves. Never hand-edit. |
+| `sw.js` | **Generated** copy of `src/sw.js`. Must sit beside `index.html` on an https host. Never hand-edit. |
+| `scripts/build-pages.py` | The repository-owned build: generates `index.html` + `sw.js` from `src/` and runs the parity and integrity checks. Standard library only. |
+| `tests/sw.test.mjs` | Service worker fetch-strategy tests (Node, mocked caches/fetch). |
+| `docs/` | `ARCHITECTURE.md`, `TESTING.md`, `DEPLOYMENT.md` — the detailed procedures. |
 | `manifest.json` | Home-screen install metadata (name, icons, full-screen launch). |
 | `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `icon-maskable-512.png` | App icons for the home screen; the maskable one is padded so round icon masks do not clip the snowflake. |
 
 ## Build & parity
 
-`index.html` is **generated** from `tracker-source.html` by a private build
-script — it is never hand-edited. The only intentional differences between the
-two files are the basemap: `index.html` runs in vector mode with the MapLibre
-GL library tags injected; `tracker-source.html` runs the raster mode used for
-testing. On every release the script builds the deployable file, then reverses
-those known changes and asserts the result is byte-identical to the source —
-so any other difference fails the build. Parity is asserted on every build.
-The check proves the two files carry identical app logic; it does not
-replace functional testing, which is done separately on every release. The
-build also asserts that the service worker's library integrity hashes match
-the page tags exactly, so the two copies of those fingerprints cannot drift.
+`index.html` is **generated** from `src/tracker-source.html` by the build
+script in this repository — it is never hand-edited:
+
+```
+python3 scripts/build-pages.py           # build + verify (writes index.html, sw.js)
+python3 scripts/build-pages.py --check   # verify only: committed files match a fresh build
+node tests/sw.test.mjs                   # service worker tests
+```
+
+The only intentional differences between source and deployment are the
+basemap: `index.html` runs in vector mode with the MapLibre GL library tags
+injected; the source runs the raster mode used for testing. On every build
+the script reverses those known changes and asserts the result is
+byte-identical to the source — so any other difference fails the build.
+The build also asserts that the service worker's library integrity hashes
+match the page tags exactly, so the two copies of those fingerprints cannot
+drift. GitHub Actions runs the `--check` build and the service worker tests
+on every push. Parity proves the two files carry identical app logic; it
+does not replace functional testing, which is done separately on every
+release — see `docs/TESTING.md`. Deployment is `docs/DEPLOYMENT.md`;
+architecture is `docs/ARCHITECTURE.md`; changes are in `CHANGELOG.md`.
 
 ## Running it
 
