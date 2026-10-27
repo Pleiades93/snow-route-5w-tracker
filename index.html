@@ -37,35 +37,27 @@
   #bar { height: 5px; background: #3a3f47; border-radius: 3px; margin-top: 8px; overflow: hidden; }
   #barFill { height: 100%; width: 0%; background: #2ecc71; transition: width .3s; }
   #warn {
-    position: absolute; left: 10px; top: calc(150px + var(--sat)); z-index: 1000;
+    position: absolute; left: 10px; top: calc(96px + var(--sat)); z-index: 1000;
     background: #b3261e; color: #fff; font-size: 12px; font-weight: 700;
     padding: 5px 9px; border-radius: 8px;
   }
   .hidden { display: none; }
   #info {
-    position: absolute; top: calc(96px + var(--sat)); right: 10px; z-index: 1000; width: min(216px, 56vw);
-    background: rgba(20,22,28,.94); color: #fff; border-radius: 12px; padding: 10px;
+    position: absolute; top: calc(96px + var(--sat)); right: 10px; z-index: 1000; width: min(196px, 52vw);
+    background: rgba(20,22,28,.94); color: #fff; border-radius: 12px; padding: 8px;
     box-shadow: 0 4px 16px rgba(0,0,0,.35);
     transition: opacity .15s ease, transform .15s ease; touch-action: manipulation;
   }
   #info.hidden { display: block; opacity: 0; pointer-events: none; transform: translateY(-8px); }
-  #selName { font-size: 16px; font-weight: 700; line-height: 1.2; }
-  #selStatus { font-size: 12.5px; margin: 4px 0 8px; color: #ddd; }
+  #selName { font-size: 15px; font-weight: 700; line-height: 1.2; }
+  #selStatus { font-size: 12px; margin: 3px 0 6px; color: #ddd; }
   #selStatus .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; }
   #selBtn {
     width: 100%; min-height: 44px; border: none; border-radius: 10px;
-    font-size: 15px; font-weight: 700; color: #fff; background: #1e9e57;
+    font-size: 14px; font-weight: 700; color: #fff; background: #1e9e57;
   }
   #selBtn.undo { background: #555; }
   #selBtn:disabled { background: #3a3f47; color: #999; }
-  .sideRow { display: flex; gap: 8px; margin-top: 8px; }
-  .sideRow button { flex: 1; min-height: 56px; border: none; border-radius: 10px; font-size: 13.5px; font-weight: 700; color: #fff; background: #3a3f47; }
-  .sideRow button.done { background: #1e9e57; }
-  .sideRow button:disabled { opacity: .5; }
-  .flagRow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .flagRow:empty { display: none; }
-  .flagRow button { flex: 1 1 40%; min-height: 34px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; color: #cfd4dc; background: #2c3037; }
-  .flagRow button.on { background: #b3541e; color: #fff; }
   #sheet {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 1100;
     background: rgba(20,22,28,.97); color: #fff; max-height: 62%;
@@ -90,18 +82,19 @@
   .srow.done .dot { background: #2ecc71; }
   .srow.done .nm { color: #9fd3ae; }
   .srow .tm { margin-left: auto; font-size: 12px; color: #8fae99; white-space: nowrap; }
-  /* v5.35: Flip + Night moved into a top-left dropdown (Andrew's call - on the
-     vector build the MapLibre logo sits bottom-right, over where they were).
-     #menuBtn is the little square with three bars; the drop holds the two
-     buttons, which keep their ids, so applyFlip/applyNight are untouched. */
-  #menuWrap { position: absolute; left: 10px; top: calc(96px + var(--sat)); z-index: 1001; }
+  /* v5.41: Flip + Night live in a dropdown again - the hamburger (three
+     bars) sits bottom-right and the drop opens UPWARD from it (Andrew's
+     call; the v5.40 standalone stack lasted one build). The wrap is raised
+     a little so it clears the attribution strip / MapLibre logo in that
+     corner. Buttons keep their ids, so applyFlip/applyNight are untouched. */
+  #menuWrap { position: absolute; right: 10px; bottom: calc(30px + var(--sab)); z-index: 1001; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
   #menuBtn {
     width: 46px; height: 46px; border: none; border-radius: 10px; cursor: pointer;
     background: rgba(20,22,28,.94); box-shadow: 0 2px 8px rgba(0,0,0,.3);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
   }
   #menuBtn i { display: block; width: 22px; height: 3px; border-radius: 2px; background: #fff; }
-  #menuDrop { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+  #menuDrop { display: flex; flex-direction: column; gap: 8px; }
   #menuDrop.hidden { display: none; }
   #menuDrop button {
     min-height: 48px; min-width: 132px; padding: 12px 16px; border: none; border-radius: 10px; cursor: pointer;
@@ -211,21 +204,19 @@
   <div id="selName">No street selected</div>
   <div id="selStatus">Tap a street on the map</div>
   <button id="selBtn" disabled>Mark completed</button>
-  <div class="sideRow"><button id="selLeft" disabled>Left side</button><button id="selRight" disabled>Right side</button></div>
-  <div class="flagRow" id="flagRow"></div>
 </div>
 <button id="gpsBtn" title="My location">&#128205;</button>
 <button id="homeBtn" title="Back to route">&#127968;</button>
-<div id="spd" class="hidden"></div>
-<div id="suggest" class="hidden"><span id="sugText"></span><button id="sugYes">Show street</button><button id="sugNo">Not yet</button></div>
-<div id="stale" class="hidden"><span id="staleText"></span><button id="staleYes">Archive &amp; start new</button><button id="staleNo">Keep</button></div>
 <div id="menuWrap">
-  <button id="menuBtn" aria-label="Map options"><i></i><i></i><i></i></button>
   <div id="menuDrop" class="hidden">
     <button id="flipBtn">Flip</button>
     <button id="nightBtn">Night</button>
   </div>
+  <button id="menuBtn" aria-label="Map options"><i></i><i></i><i></i></button>
 </div>
+<div id="spd" class="hidden"></div>
+<div id="suggest" class="hidden"><span id="sugText"></span><button id="sugYes">Show street</button><button id="sugNo">Not yet</button></div>
+<div id="stale" class="hidden"><span id="staleText"></span><button id="staleYes">Archive &amp; start new</button><button id="staleNo">Keep</button></div>
 <div id="toast"></div>
 <div id="sheet">
   <div id="sheetHead">Streets<button id="exportBtn">Export</button><button id="sheetClose">Close</button></div>
@@ -294,12 +285,20 @@ try {
   const rawT = JSON.parse(localStorage.getItem(LS_TIMES_KEY) || '{}');
   if (rawT && typeof rawT === 'object' && !Array.isArray(rawT)) doneTimes = rawT;
 } catch (e) { doneTimes = {}; }
+// BUG-04 (ChatGPT audit #2): drop completion times that are not real timestamps or
+// not for a route street, so one bad record cannot poison formatting or pace math.
+Object.keys(doneTimes).forEach(n => { if (!ROADS[n] || isNaN(Date.parse(doneTimes[n]))) delete doneTimes[n]; });
 // Archive of earlier runs: Reset moves the finished run here instead of destroying it (last 10 kept).
 let history = [];
 try {
   const h = JSON.parse(localStorage.getItem(LS_HIST_KEY) || '[]');
   if (Array.isArray(h)) history = h;
 } catch (e) { history = []; }
+// BUG-04 (ChatGPT audit #2): keep only well-formed archived runs - an entry needs a
+// parseable date and an items object; inside items, only route streets with a
+// parseable (or null) time survive. Valid runs are recovered, never all discarded.
+history = history.filter(h => h && typeof h === 'object' && !Array.isArray(h) && typeof h.at === 'string' && !isNaN(Date.parse(h.at)) && h.items && typeof h.items === 'object' && !Array.isArray(h.items));
+history.forEach(h => Object.keys(h.items).forEach(n => { if (!ROADS[n] || (h.items[n] !== null && isNaN(Date.parse(h.items[n])))) delete h.items[n]; }));
 // The current run's TRUE start (epoch ms), stamped by the Start clean button in the Pace
 // panel. 0 = not started; paceInfo then falls back to the first completed street, as before.
 let runStart = 0;
@@ -307,7 +306,6 @@ try { runStart = +localStorage.getItem(LS_START_KEY) || 0; } catch (e) { runStar
 function saveStart() { if (runStart) lsSet(LS_START_KEY, String(runStart)); else try { localStorage.removeItem(LS_START_KEY); } catch (e) {} }
 function save() { lsSet(LS_KEY, JSON.stringify([...doneSet])); }
 function saveTimes() { lsSet(LS_TIMES_KEY, JSON.stringify(doneTimes)); }
-function saveSides() { lsSet(LS_SIDES_KEY, JSON.stringify(sides)); }
 function isFullRun(h) { return !!(h && h.items && Object.keys(h.items).length >= TOTAL); }
 // History holds at most 10 runs, but a full clean (the pace baseline) is evicted only when
 // every slot is a full clean — short junk runs go first.
@@ -325,14 +323,13 @@ function loadJSON(k, def) { try { const v = JSON.parse(localStorage.getItem(k));
 const isObj = o => o && typeof o === 'object' && !Array.isArray(o);
 let notes = loadJSON(LS_NOTES_KEY, {}); if (!isObj(notes)) notes = {};
 let doneVia = loadJSON(LS_VIA_KEY, {}); if (!isObj(doneVia)) doneVia = {};
-let sides = loadJSON(LS_SIDES_KEY, {}); if (!isObj(sides)) sides = {};
 let trail = loadJSON(LS_TRAIL_KEY, []); trail = Array.isArray(trail) ? trail.filter(p => Array.isArray(p) && p.length === 3) : [];
 const covSet = {};
 (function () { const c = loadJSON(LS_COV_KEY, {}); if (isObj(c)) Object.keys(c).forEach(n => { if (ROADS[n] && Array.isArray(c[n])) covSet[n] = new Set(c[n]); }); })();
 function saveCov() { const o = {}; Object.keys(covSet).forEach(n => { if (covSet[n].size) o[n] = [...covSet[n]]; }); lsSet(LS_COV_KEY, JSON.stringify(o)); }
 function saveTrail() { lsSet(LS_TRAIL_KEY, JSON.stringify(trail)); }
 function saveAux() { lsSet(LS_NOTES_KEY, JSON.stringify(notes)); lsSet(LS_VIA_KEY, JSON.stringify(doneVia)); saveCov(); }
-function saveAll() { save(); saveTimes(); saveAux(); saveSides(); }
+function saveAll() { save(); saveTimes(); saveAux(); }
 
 // ===== TIME FORMATS =====
 const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -520,72 +517,24 @@ map.on('zoomend', layoutStreets);
 // Streets: each street is ONE multi-segment path per role (casing, line, tap target), so there is
 // exactly one tap handler per street. The handler resolves the tap to the NEAREST street, so
 // intersections no longer favour whichever street was drawn last.
-// A street's two sides: while a street is partially done it renders as two FILLED
-// half-bands (polygons), not strokes. Each half runs from the centreline (nudged
-// SEAM_PX past centre, so the two fills overlap a hair and can never show a gap) out
-// to SIDE_BAND/2 on its side. Both halves are built from the same centreline
-// vertices, so the seam is exact at every vertex, joint and end - no stroke caps,
-// nothing painted over anything (Andrew's precision rule, 2026-10-26; the old
-// offset strokes bled colours over each other at segment tips and bends). Widths
-// are SCREEN pixels, so the bands are rebuilt on every zoom change (layoutStreets)
-// - a fixed metre offset would drift off the street as the zoom changes.
-// Right/left follow the direction the street's line runs in the map data: right is
-// your right hand when facing along that direction - except streets in SIDE_FLIP,
-// whose data direction runs opposite to how Andrew drives them (his word, per
-// street), so their halves render swapped.
-const SIDE_BAND = 12, SEAM_PX = 0.3;   // v5.32: widened from 8 — Andrew picked 12 from rendered comparisons (halves read as real road halves, not stripes)
-const SIDE_FLIP = new Set(['Velmar']);
-// Option B casing (Andrew's pick, 2026-10-26): every street carries a dark edge so it
-// reads as a printed ribbon on the map instead of a marker stroke; near-black on the
-// dark base at night. The selected street swaps the dark edge for a white halo.
-const CASE_DAY = '#26292f', CASE_NIGHT = '#0e1013';
-function offsetSegs(segs, dirSign, offM) {
-  return segs.map(seg => seg.map((p, i) => {
-    const a = seg[Math.max(0, i - 1)], b = seg[Math.min(seg.length - 1, i + 1)];
-    // Direction in local metre space (x = lng * JM * JCOS, y = lat * JM). The old
-    // dx differentiated lng*cos(lat) endpoint-by-endpoint, which injects a spurious
-    // east-west term (about lng * sin(lat) * dLat) that rotated the offset
-    // direction - worst on north-south streets - so the band shifted along the
-    // street, narrowed, and its edge wavered against the casing (v5.33 fix).
-    let dx = (b[1] - a[1]) * JCOS, dy = b[0] - a[0];
-    const len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
-    const ox = dy * dirSign, oy = -dx * dirSign;
-    return [p[0] + oy * offM / JM, p[1] + ox * offM / (JM * JCOS)];
-  }));
-}
-// One side of a street as filled rings (one ring per segment): inner edge just past
-// the centreline on the far side, outer edge at SIDE_BAND/2 on this side, joined by
-// straight end caps. mpp = metres per screen pixel at the street's latitude.
-// Resample a centreline piece to stations at most stepM apart (v5.33). The band's
-// outer edge is a polygon chord chain: between far-apart vertices on a bend, the
-// chord sags inside the true parallel curve, so the dark casing rim breathed in
-// and out along curves (Andrew's "black border goes weird" on partial streets,
-// obvious once the band widened to 12). Dense stations keep the sag sub-pixel.
-function densify(seg, stepM) {
-  if (seg.length < 2) return seg;
-  const out = [seg[0]];
-  for (let i = 1; i < seg.length; i++) {
-    const a = seg[i - 1], b = seg[i];
-    const k = Math.max(1, Math.ceil(jDistM(a, b) / stepM));
-    for (let j = 1; j <= k; j++) out.push([a[0] + (b[0] - a[0]) * j / k, a[1] + (b[1] - a[1]) * j / k]);
-  }
-  return out;
-}
-function halfBand(segs, dirSign, mpp) {
-  return segs.map(seg => {
-    const dense = densify(seg, 2);
-    const inner = offsetSegs([dense], -dirSign, SEAM_PX * mpp)[0];
-    const outer = offsetSegs([dense], dirSign, SIDE_BAND / 2 * mpp)[0];
-    return inner.concat(outer.slice().reverse());
-  });
-}
+// v5.38 (Andrew's call, 2026-10-26): back to basics - the Left/Right side
+// marking was removed entirely. One option per street: Mark completed, and
+// the whole street turns green. The half-band geometry that rendered split
+// streets lived here and is gone.
+// Road casing history: v5.27-v5.35 drew a dark slate edge under every street
+// (Option B) and swapped it for a white halo on the selected street. v5.36
+// (Andrew's pick from rendered options A-F, 2026-10-26): NO outline at all -
+// the casing layers are kept for geometry but never drawn, and selection is
+// shown by vibrancy instead (streets rest muted, the selected street goes
+// full opacity - see styleStreet).
+
 // Junction cut-offs: where a street ENDS at another street (or at a reference
 // feature), its drawn line stops TRIM_PX short of the meeting point, so junctions
 // read as clean breaks instead of one road painted over another (Andrew's rule,
 // 2026-10-26). A street that flows THROUGH a junction is never cut, and dead ends
 // keep their round caps. The set of junction ends is computed once from the true
 // geometry; the trim distance is screen pixels, so it is re-laid-out on every zoom
-// alongside the side lines - one layout engine (layoutStreets) owns both.
+// the trim is re-laid-out on every zoom (layoutStreets).
 const JM = MLAT, JCOS = MLNG / MLAT;   // one constants home: MLAT/MLNG above
 function jDistM(a, b) { return Math.hypot((b[1] - a[1]) * JM * JCOS, (b[0] - a[0]) * JM); }
 function ptSegM(p, a, b) {
@@ -612,49 +561,6 @@ const JUNCTION_ENDS = {};
       if (!continues(last, si) && touchesOther(last)) set.add(si + ':1');
     });
     JUNCTION_ENDS[n] = set;
-  });
-})();
-// Segment orientation: a street's pieces come from separate map ways whose stored
-// directions are arbitrary - on 6 streets (Valeria, Greenpark, Astona, Blackburn,
-// Columbus, Bloomingdale) two pieces meet head-to-head or tail-to-tail, so a side
-// computed piece-by-piece JUMPS to the other side of the street at that joint
-// (the crisscross Andrew reported, 2026-10-26). ORIENT stitches every street into
-// one consistent travel flow: seed with the longest piece, then propagate - a
-// piece meeting an already-oriented piece is reversed if needed so travel flows
-// continuously through the joint; a piece whose end lands mid-way along another
-// piece starts there, so its side wraps the corner consistently. The side bands
-// are built from the oriented pieces, so one side of a street is the same
-// physical side from one end of the street to the other.
-const ORIENT = {};
-(function () {
-  const key = p => p[0].toFixed(7) + ',' + p[1].toFixed(7);
-  Object.keys(ROADS).forEach(n => {
-    const segs = ROADS[n];
-    const flip = new Array(segs.length).fill(null);
-    let seed = 0;
-    segs.forEach((sg, i) => { if (sg.length > segs[seed].length) seed = i; });
-    flip[seed] = false;
-    const rawS = i => key(segs[i][0]), rawE = i => key(segs[i][segs[i].length - 1]);
-    const oS = i => (flip[i] ? rawE(i) : rawS(i)), oE = i => (flip[i] ? rawS(i) : rawE(i));
-    let progress = true;
-    while (progress) {
-      progress = false;
-      for (let i = 0; i < segs.length; i++) {
-        if (flip[i] !== null) continue;
-        for (let j = 0; j < segs.length; j++) {
-          if (i === j || flip[j] === null) continue;
-          if (rawS(i) === oE(j) || rawE(i) === oS(j)) { flip[i] = false; progress = true; break; }
-          if (rawS(i) === oS(j) || rawE(i) === oE(j)) { flip[i] = true; progress = true; break; }
-          const oj = flip[j] ? segs[j].slice().reverse() : segs[j];
-          const onInterior = p => key(p) !== key(oj[0]) && key(p) !== key(oj[oj.length - 1]) &&
-            oj.some((q, qi) => qi > 0 && ptSegM(p, oj[qi - 1], q) < 2.5);
-          if (onInterior(segs[i][0])) { flip[i] = false; progress = true; break; }
-          if (onInterior(segs[i][segs[i].length - 1])) { flip[i] = true; progress = true; break; }
-        }
-      }
-    }
-    segs.forEach((sg, i) => { if (flip[i] === null) flip[i] = false; });
-    ORIENT[n] = flip;
   });
 })();
 function trimToward(a, b, distM) {
@@ -692,12 +598,6 @@ function layoutStreets() {
     const s = streets[n], ts = trimmedSegs(n, trimM);
     s.casings.forEach(l => l.setLatLngs(ts));
     s.lines.forEach(l => l.setLatLngs(ts));
-    const lat = s.segs[0][0][0];
-    const mppS = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
-    const sgn = SIDE_FLIP.has(n) ? -1 : 1;
-    const ots = ts.map((piece, i) => (ORIENT[n][i] ? piece.slice().reverse() : piece));
-    s.right.forEach(l => l.setLatLngs(halfBand(ots, sgn, mppS)));
-    s.left.forEach(l => l.setLatLngs(halfBand(ots, -sgn, mppS)));
   });
 }
 let swallowClickUntil = 0;   // set by the flipped-pan handler: swallow the click a pan ends with
@@ -709,11 +609,9 @@ names.forEach(name => {
   segs.forEach(s => s.forEach(ll => { b.extend(ll); allBounds.push(ll); }));
   const casing = L.polyline(segs, { color: '#ffffff', weight: 12, opacity: 0, interactive: false }).addTo(map);
   const line = L.polyline(segs, { color: pendingColor(name), weight: 6, opacity: 0.95, interactive: false }).addTo(map);
-  const rightLine = L.polygon([], { stroke: false, fillColor: pendingColor(name), fillOpacity: 0, interactive: false }).addTo(map);
-  const leftLine = L.polygon([], { stroke: false, fillColor: pendingColor(name), fillOpacity: 0, interactive: false }).addTo(map);
   const hit = L.polyline(segs, { color: '#fff', weight: 24, opacity: 0, bubblingMouseEvents: false }).addTo(map);
   hit.on('click', e => { if (Date.now() < swallowClickUntil) return; select(nearestStreet(tapLatLng(e.latlng)) || name); });
-  streets[name] = { casings: [casing], lines: [line], right: [rightLine], left: [leftLine], bounds: b, segs };
+  streets[name] = { casings: [casing], lines: [line], bounds: b, segs };
 });
 function tapLatLng(ll) {
   if (!flipped) return ll;
@@ -799,21 +697,14 @@ function drawTrail() {
 // ===== SELECTION / PANEL =====
 let selected = null;
 function styleStreet(name) {
-  const s = streets[name], done = doneSet.has(name), st = sides[name];
-  const partial = !done && !!(st && (st.r || st.l));
+  const s = streets[name], done = doneSet.has(name);
+  const sel = name === selected;
   s.lines.forEach(l => l.setStyle(done
-    ? { color: GREEN, weight: 8, opacity: 1 }
-    : partial ? { opacity: 0 } : { color: pendingColor(name), weight: 6, opacity: 0.95 }));
-  const sideStyle = (arr, isDone) => arr.forEach(l => l.setStyle(partial
-    ? { fillColor: isDone ? GREEN : pendingColor(name), fillOpacity: 0.95 }
-    : { fillOpacity: 0 }));
-  sideStyle(s.right, !!(st && st.r));
-  sideStyle(s.left, !!(st && st.l));
-  const coreW = done ? 8 : partial ? SIDE_BAND : 6;
-  s.casings.forEach(c => c.setStyle(name === selected
-    ? { color: '#ffffff', weight: coreW + 9, opacity: 0.97 }
-    : { color: isNight() ? CASE_NIGHT : CASE_DAY, weight: coreW + 4, opacity: 0.92 }));
+    ? { color: GREEN, weight: 8, opacity: sel ? 1 : 0.62 }
+    : { color: pendingColor(name), weight: 6, opacity: sel ? 1 : 0.58 }));
+  s.casings.forEach(c => c.setStyle({ opacity: 0 }));   // v5.36: casing never drawn (pick B)
 }
+
 function updateCount() {
   $('count').textContent = doneSet.size + ' of ' + TOTAL + ' completed';
   $('barFill').style.width = (TOTAL ? (doneSet.size / TOTAL * 100) : 0) + '%';
@@ -821,59 +712,27 @@ function updateCount() {
 }
 function renderPanel() {
   const nameEl = $('selName'), stEl = $('selStatus'), btn = $('selBtn');
-  const btnR = $('selRight'), btnL = $('selLeft');
   if (!selected) {
     nameEl.textContent = 'No street selected';
     stEl.textContent = 'Tap a street on the map';
     btn.disabled = true; btn.textContent = 'Mark completed'; btn.className = '';
-    btnR.disabled = true; btnL.disabled = true;
-    btnR.textContent = 'Right side'; btnL.textContent = 'Left side';
-    btnR.className = ''; btnL.className = '';
-    renderFlags();
     return;
   }
   nameEl.textContent = selected;
-  btn.disabled = false; btnR.disabled = false; btnL.disabled = false;
-  const st = sides[selected] || {};
-  const uiR = flipped ? st.l : st.r, uiL = flipped ? st.r : st.l;
-  btnR.textContent = 'Right side' + (uiR ? ' \u2713' : '');
-  btnL.textContent = 'Left side' + (uiL ? ' \u2713' : '');
-  btnR.className = uiR ? 'done' : '';
-  btnL.className = uiL ? 'done' : '';
+  btn.disabled = false;
   if (doneSet.has(selected)) {
     const t = doneTimes[selected], doneAt = t ? fmtWhen(t) : '';
     stEl.innerHTML = '<span class="dot" style="background:' + GREEN + '"></span>Completed' + (doneAt ? ' ' + doneAt : '') +
       (t ? ' (' + fmtAgo(t) + ')' : '') + (doneVia[selected] === 'gps' ? ' \u00b7 GPS' : '');
     btn.textContent = 'Mark not done'; btn.className = 'undo';
-  } else if (uiR || uiL) {
-    stEl.innerHTML = '<span class="dot" style="background:#f5a623"></span>' +
-      (uiR ? 'Right side done \u2713' : 'Left side done \u2713') + ' \u00b7 ' + (uiR ? 'left' : 'right') + ' side to do';
-    btn.textContent = '\u2713 Mark completed'; btn.className = '';
   } else {
     stEl.innerHTML = '<span class="dot" style="background:' + pendingColor(selected) + '"></span>Not done yet';
     btn.textContent = '\u2713 Mark completed'; btn.className = '';
   }
-  renderFlags();
 }
-// Street flags (car blocking / hazard / missed spot / needs salt): toggle chips in the
-// panel. Flags live in notes[] and ride along into the snow log and the run archive.
-function renderFlags() {
-  const row = $('flagRow');
-  if (!selected) { row.innerHTML = ''; return; }
-  const cur = (notes[selected] || []).map(f => f.k);
-  row.innerHTML = Object.keys(FLAGS).map(k => '<button data-flag="' + k + '"' + (cur.includes(k) ? ' class="on"' : '') + '>' + FLAGS[k] + '</button>').join('');
-  row.querySelectorAll('button').forEach(b => { b.onclick = () => toggleFlag(b.dataset.flag); });
-}
-function toggleFlag(k) {
-  if (!selected) return;
-  clearUndo();
-  const arr = notes[selected] || (notes[selected] = []);
-  const i = arr.findIndex(f => f.k === k);
-  if (i >= 0) arr.splice(i, 1); else arr.push({ k, at: new Date().toISOString() });
-  if (!arr.length) delete notes[selected];
-  saveAux(); renderFlags(); renderList();
-  showToast((i >= 0 ? 'Flag removed: ' : 'Flagged: ') + FLAGS[k] + ' \u2014 ' + selected);
-}
+// v5.38: the panel holds only the street name, its status and Mark completed
+// (the v5.37 note about flag chips and Left/Right is history - both are gone).
+
 function refreshAll() { names.forEach(styleStreet); renderPanel(); updateCount(); renderList(); }
 function select(name) {
   closePace();
@@ -904,33 +763,8 @@ function markDone(n, via, at) {
   clearUndo();
   const mts = at || new Date().toISOString();
   doneSet.add(n); doneTimes[n] = mts; doneVia[n] = via;
-  const mst = sides[n] || {};
-  sides[n] = { r: mst.r || mts, l: mst.l || mts };
   showToast('\u2713 ' + n + ' \u00b7 ' + fmtClock(new Date(doneTimes[n])) + (via === 'gps' ? ' (GPS)' : '') +
     (doneSet.size === TOTAL ? ' \u2014 ALL ' + TOTAL + ' DONE' : ''));
-  finishChange(n);
-}
-// Mark or unmark ONE side of a street. Both sides done = fully completed: the street joins
-// doneSet, counts toward the total, and its completion time is when the second side landed.
-// Unmarking a side of a completed street drops it back to partial.
-function toggleSide(n, side, uiSide) {
-  clearUndo();
-  const now = new Date().toISOString();
-  let st = sides[n];
-  if (!st) { st = sides[n] = {}; }
-  if (doneSet.has(n) && !st.r && !st.l && doneTimes[n]) { st.r = doneTimes[n]; st.l = doneTimes[n]; }
-  if (st[side]) {
-    delete st[side];
-    if (doneSet.has(n)) { doneSet.delete(n); delete doneTimes[n]; delete doneVia[n]; }
-    showToast(n + ' \u00b7 ' + ((uiSide || side) === 'r' ? 'right' : 'left') + ' side unmarked');
-  } else {
-    st[side] = now;
-    if (st.r && st.l) {
-      doneSet.add(n); doneTimes[n] = now; doneVia[n] = 'tap';
-      showToast('\u2713 ' + n + ' fully completed \u00b7 ' + fmtClock(new Date(now)) + (doneSet.size === TOTAL ? ' \u2014 ALL ' + TOTAL + ' DONE' : ''));
-    } else showToast(n + ' \u00b7 ' + ((uiSide || side) === 'r' ? 'right' : 'left') + ' side done \u00b7 ' + fmtClock(new Date(now)));
-  }
-  if (!st.r && !st.l) delete sides[n];
   finishChange(n);
 }
 function toggleDone() {
@@ -938,7 +772,7 @@ function toggleDone() {
   const n = selected;
   if (doneSet.has(n)) {
     clearUndo();
-    doneSet.delete(n); delete doneTimes[n]; delete doneVia[n]; delete sides[n]; dismissed.add(n);
+    doneSet.delete(n); delete doneTimes[n]; delete doneVia[n]; dismissed.add(n);
     showToast('Unmarked ' + n);
     finishChange(n);
   } else markDone(n, 'tap');
@@ -950,13 +784,6 @@ $('selBtn').addEventListener('click', () => {
   if (tapGuard('sel')) return;
   toggleDone();
 });
-function sideTap(side) {
-  if (tapGuard('side')) return;
-  if (selected) toggleSide(selected, flipped ? (side === 'r' ? 'l' : 'r') : side, side);
-}
-$('selRight').addEventListener('click', () => sideTap('r'));
-$('selLeft').addEventListener('click', () => sideTap('l'));
-
 // ===== STREET LIST (All / To do / Done) =====
 let listFilter = 'all';
 function renderList() {
@@ -976,9 +803,7 @@ function renderList() {
     d.innerHTML = '<div class="dot"></div><div class="nm"></div><div class="tm"></div>';
     d.querySelector('.nm').textContent = n;
     const doneAt = doneSet.has(n) && doneTimes[n] ? fmtWhen(doneTimes[n]) : '';
-    const stN = sides[n], partTxt = (!doneSet.has(n) && stN && (stN.r || stN.l)) ? ((flipped ? stN.l : stN.r) ? 'Right' : 'Left') + ' side done' : '';
-    d.querySelector('.tm').textContent = (notes[n] && notes[n].length ? '\u2691 ' : '') + (doneAt ? 'done ' + doneAt + ' (' + fmtAgo(doneTimes[n]) + ')' : partTxt);
-    if (partTxt) d.querySelector('.dot').style.background = '#f5a623';
+    d.querySelector('.tm').textContent = (notes[n] && notes[n].length ? '\u2691 ' : '') + (doneAt ? 'done ' + doneAt + ' (' + fmtAgo(doneTimes[n]) + ')' : '');
     d.onclick = () => {
       select(n);
       pauseFollow();   // a deliberate look at another street must not be yanked back by the next GPS fix
@@ -1060,10 +885,39 @@ function buildBackup() {
 function doRestore() {
   let parsed;
   try { parsed = JSON.parse($('xText').value); } catch (e) { showToast('That is not a valid backup \u2014 paste the whole backup text'); return; }
-  if (!parsed || parsed.app !== 'snow5w-backup' || !parsed.data) { showToast('That is not a Route 5W backup'); return; }
-  let wrote = 0;
-  backupKeys().forEach(k => { if (typeof parsed.data[k] === 'string' && lsSet(k, parsed.data[k])) wrote++; });
-  if (!wrote) { showToast('Nothing in that backup to restore'); return; }
+  if (!parsed || parsed.app !== 'snow5w-backup' || !parsed.data || typeof parsed.data !== 'object' || Array.isArray(parsed.data)) { showToast('That is not a Route 5W backup'); return; }
+  if (parsed.v !== 1) { showToast('Unsupported backup version (' + String(parsed.v) + ') \u2014 nothing was changed'); return; }
+  // Validate EVERY value before touching storage (BUG-01, ChatGPT audit #2): the JSON
+  // keys must parse to the right shape; the plain-string keys (start / night / flip)
+  // only need to be strings. One bad value rejects the whole backup, state untouched.
+  const JSON_SHAPE = { [LS_KEY]: 'arr', [LS_TIMES_KEY]: 'obj', [LS_HIST_KEY]: 'arr', [LS_NOTES_KEY]: 'obj', [LS_VIA_KEY]: 'obj', [LS_TRAIL_KEY]: 'arr', [LS_COV_KEY]: 'obj', [LS_SIDES_KEY]: 'obj' };
+  const entries = [];
+  for (const k of backupKeys()) {
+    const v = parsed.data[k];
+    if (v === undefined) continue;
+    if (typeof v !== 'string') { showToast('Backup has a bad value for ' + k + ' \u2014 nothing was changed'); return; }
+    const shape = JSON_SHAPE[k];
+    if (shape) {
+      let pv; try { pv = JSON.parse(v); } catch (e) { showToast('Backup value for ' + k + ' is not valid JSON \u2014 nothing was changed'); return; }
+      if (shape === 'arr' ? !Array.isArray(pv) : !(pv && typeof pv === 'object' && !Array.isArray(pv))) { showToast('Backup value for ' + k + ' has the wrong shape \u2014 nothing was changed'); return; }
+    }
+    entries.push([k, v]);
+  }
+  if (!entries.length) { showToast('Nothing in that backup to restore'); return; }
+  // Snapshot the current state, write each value, then VERIFY by reading it back.
+  // Any failure rolls the snapshot back in: a restore is all-or-nothing, never a
+  // mixed state (the old code wrote key-by-key and reloaded regardless).
+  const snap = {};
+  backupKeys().forEach(k => { snap[k] = localStorage.getItem(k); });
+  const rollback = () => backupKeys().forEach(k => { try { if (snap[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, snap[k]); } catch (e) {} });
+  for (const pair of entries) {
+    const k = pair[0], v = pair[1];
+    if (!lsSet(k, v) || localStorage.getItem(k) !== v) {
+      rollback();
+      showToast('Restore failed while writing ' + k + ' \u2014 your current data was put back, nothing was changed');
+      return;
+    }
+  }
   showToast('Backup restored \u2014 reloading');
   setTimeout(() => location.reload(), 600);
 }
@@ -1133,7 +987,6 @@ resetBtn.onclick = () => {
     Object.keys(snap.items).forEach(n => { if (snap.items[n]) doneTimes[n] = snap.items[n]; });
     doneVia = Object.assign({}, snap.via || {});
     notes = JSON.parse(JSON.stringify(snap.notes || {}));
-    sides = JSON.parse(JSON.stringify(snap.sides || {}));
     runStart = snap.startedAt ? (Date.parse(snap.startedAt) || 0) : 0; saveStart();
     if (covSnap) {
       Object.keys(covSet).forEach(k => delete covSet[k]);
@@ -1160,9 +1013,9 @@ function performReset() {
   disarmReset();
   $('stale').classList.add('hidden');
   let snap = null;
-  if (doneSet.size || Object.keys(notes).length || Object.keys(sides).length) {
+  if (doneSet.size || Object.keys(notes).length) {
     const ts = [...doneSet].map(n => Date.parse(doneTimes[n])).filter(t => !isNaN(t)).sort((a, b) => a - b);
-    snap = { at: new Date().toISOString(), items: {}, sides: JSON.parse(JSON.stringify(sides)), via: Object.assign({}, doneVia), notes: JSON.parse(JSON.stringify(notes)),
+    snap = { at: new Date().toISOString(), items: {}, via: Object.assign({}, doneVia), notes: JSON.parse(JSON.stringify(notes)),
              km: ts.length ? +trailKm(ts[0]).toFixed(1) : 0, startedAt: (runStart && ts.length && runStart <= ts[0]) ? new Date(runStart).toISOString() : (ts.length ? new Date(ts[0]).toISOString() : null) };
     doneSet.forEach(n => { snap.items[n] = doneTimes[n] || null; });
     const sMs = Date.parse(snap.startedAt);
@@ -1189,7 +1042,7 @@ function performReset() {
   // Keep the coverage state Undo will need, before it is cleared below.
   const covCopy = {}; Object.keys(covSet).forEach(k => { covCopy[k] = [...covSet[k]]; });
   resetUndoCov = { cov: covCopy, dis: [...dismissed] };
-  doneSet = new Set(); doneTimes = {}; doneVia = {}; notes = {}; sides = {};
+  doneSet = new Set(); doneTimes = {}; doneVia = {}; notes = {};
   runStart = 0; saveStart();
   Object.keys(covSet).forEach(k => delete covSet[k]);
   dismissed.clear(); Object.keys(sugAt).forEach(k => delete sugAt[k]);
@@ -1424,13 +1277,13 @@ function coverFix(lat, lng, acc) {
 }
 $('sugYes').addEventListener('click', () => {
   const n = suggestShown; if (!n) return;
-  // GPS coverage says the street was driven \u2014 it cannot say WHICH side was cleaned, and
-  // the marking model is per-side. So the banner opens the street's panel; he taps the side.
+  // GPS coverage says the street was driven; the banner opens the street's panel
+  // and he taps Mark completed there.
   suggestShown = null;
   dismissed.add(n);
   $('suggest').classList.add('hidden');
   select(n);
-  showToast(n + ' \u2014 tap the side you cleaned');
+  showToast(n + ' \u2014 tap Mark completed');
   showSuggest();
 });
 $('sugNo').addEventListener('click', () => {
@@ -1559,8 +1412,7 @@ function renderPace(P) {
     rows.push(row('Started', fmtClock(new Date(P.cur.start))));
     rows.push(row('Elapsed', fmtDur(Date.now() - P.cur.start)));
     if (P.cur.count) {
-      const partN = names.filter(n2 => !doneSet.has(n2) && sides[n2] && (sides[n2].r || sides[n2].l)).length;
-      rows.push(row('Streets done', P.cur.count + ' of ' + TOTAL + (partN ? ' (+' + partN + ' in progress)' : '')));
+      rows.push(row('Streets done', P.cur.count + ' of ' + TOTAL));
       rows.push(row('Road done', km1(P.cur.doneM) + ' of ' + km1(totalLen) + ' km (' + Math.round(P.cur.doneM / totalLen * 100) + '%)'));
       const gkm = trail.length > 1 ? trailKm(P.cur.first) : 0;
       if (gkm >= 0.1) rows.push(row('GPS distance', gkm.toFixed(1) + ' km'));
@@ -1649,20 +1501,16 @@ setInterval(() => { updateStats(); if (selected) renderPanel(); if ($('sheet').c
 // ===== Flip (rotate the map 180 degrees) =====
 // For starting the route from the Village Green (north) end: press Flip and the whole
 // map turns upside down - Village Green goes to the bottom, you drive "up" the screen,
-// and every street's right side is on your right of the screen. Nothing about the
-// streets or sides changes in the data; the map element itself rotates (body.flipped),
+// nothing about the streets changes in the data; the map element itself rotates (body.flipped),
 // the labels are counter-rotated so they stay readable, and the state persists across
 // reloads. While flipped, Leaflet's own drag/pinch would move the map the wrong way
 // (its maths does not know the element is rotated), so dragging is replaced with a
 // small pointer handler: panBy shifts the view by the finger's own delta, which -
 // because the view itself is what moves - makes the map content follow the finger
 // exactly as it does unflipped. Pinch zooms around the centre.
-// Flipped mode is a complete mirror of normal mode, like a real GPS rotating:
-// (a) taps are un-mirrored (tapLatLng) so the street under the finger is the street
-// selected; (b) Right/Left follow the view - the buttons, the panel and the List swap
-// the side names while flipped, so "Right side" always means the driver's right in
-// the orientation on screen. The stored sides stay in street space (the physical
-// half that was cleaned), so the record is true in both views.
+// Flipped mode mirrors taps (tapLatLng) so the street under the finger is the
+// street selected.
+
 const LS_FLIP_KEY = 'snow5w.v5.flip';
 let flipped = false;
 try { flipped = localStorage.getItem(LS_FLIP_KEY) === '1'; } catch (e) {}
@@ -1693,8 +1541,9 @@ flipBtn.addEventListener('click', () => {
   try { localStorage.setItem(LS_FLIP_KEY, flipped ? '1' : ''); } catch (e) {}
   applyFlip();
 });
-// v5.35 dropdown wiring: the hamburger toggles the drop; choosing an item runs
-// it (its own handler above) and closes the drop; a tap on the map closes it.
+// v5.41 dropdown wiring (menu back, bottom-right): the hamburger toggles the
+// drop; choosing an item runs it (its own handler above) and closes the drop;
+// a tap on the map closes it.
 const menuBtn = $('menuBtn'), menuDrop = $('menuDrop');
 function closeMenu() { menuDrop.classList.add('hidden'); }
 menuBtn.addEventListener('click', () => { if (tapGuard('menu')) return; menuDrop.classList.toggle('hidden'); });
