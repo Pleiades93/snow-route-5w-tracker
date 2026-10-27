@@ -103,13 +103,23 @@ const R = { checks: [] };
 const ok = (name, cond) => R.checks.push([name, !!cond]);
 const ev = async (code) => evaluate(code);
 const exc = () => consoleLog.filter(c => c.type === 'EXCEPTION').length;
+const pollRead = async (expr, pred, ms = 9000) => {   // state-polling wait: fixed sleeps made T4 fail on a slow CI runner (the 8s undo window could lapse mid-jam); assertions unchanged, only the waiting is state-based. A read that errors (page mid-reload) counts as not-ready, never as a crash.
+  const t0 = Date.now(); let v;
+  do {
+    const raw = await ev(expr);
+    if (typeof raw === 'string') { try { v = JSON.parse(raw); } catch { v = undefined; } }
+    if (v !== undefined && pred(v)) return v;
+    await sleep(150);
+  } while (Date.now() - t0 < ms);
+  return v === undefined ? {} : v;
+};
 const mark3 = () => ev(`(() => { const base = Date.now() - 3600000; runStart = base - 300000; saveStart();
   [['Velmar', 0], ['Mellings', 720000], ['Astona', 1500000]].forEach(([n, off]) => { doneSet.add(n); doneTimes[n] = new Date(base + off).toISOString(); doneVia[n] = 'tap'; });
   refreshAll(); return true; })()`);
 await sleep(3000);
-await ev(`(() => { localStorage.clear(); location.reload(); return true; })()`); await sleep(3000);
+await ev(`(() => { localStorage.clear(); location.reload(); return true; })()`); await sleep(1200);   // floor wait: let the reload actually begin before polling, so the poll cannot be answered by the pre-reload page
 // T1: the button is Finish, and red
-let A = JSON.parse(await ev(`(() => { const b = $('resetBtn'); const cs = getComputedStyle(b); return JSON.stringify({ label: b.textContent, bg: cs.backgroundColor }); })()`));
+let A = await pollRead(`(() => { const b = $('resetBtn'); const cs = getComputedStyle(b); return JSON.stringify({ label: b.textContent, bg: cs.backgroundColor }); })()`, v => v.label === 'Finish');
 ok('T1 button says Finish', A.label === 'Finish');
 ok('T1 button is red', A.bg === 'rgb(194, 47, 36)');
 // T2: pop-up flow - No changes nothing
@@ -125,13 +135,13 @@ await ev(`(() => { setNoteText('Velmar', 'Blocked driveway at #12'); return true
 await ev(`(() => { $('resetBtn').click(); return true; })()`); await sleep(300);
 A = JSON.parse(await ev(`(() => JSON.stringify({ msg: $('finMsg').textContent }))()`));
 ok('T3 pop-up summarises streets + notes', /3 of 34 streets/.test(A.msg) && /notes on 1 street/.test(A.msg));
-await ev(`(() => { $('finYes').click(); return true; })()`); await sleep(400);
-A = JSON.parse(await ev(`(() => JSON.stringify({ h: history.length, done: doneSet.size, label: $('resetBtn').textContent, hn: history[0] && history[0].notes && history[0].notes.Velmar ? history[0].notes.Velmar[0].text : '' }))()`));
+await ev(`(() => { $('finYes').click(); return true; })()`);
+A = await pollRead(`(() => JSON.stringify({ h: history.length, done: doneSet.size, label: $('resetBtn').textContent, hn: history[0] && history[0].notes && history[0].notes.Velmar ? history[0].notes.Velmar[0].text : '' }))()`, v => v.h === 1 && v.done === 0);
 ok('T3 Yes archives the clean with its notes', A.h === 1 && A.done === 0 && /Blocked driveway/.test(A.hn));
 ok('T3 button offers Undo', A.label === 'Undo');
 // T4: Undo restores the run
-await ev(`(() => { $('resetBtn').click(); return true; })()`); await sleep(400);
-A = JSON.parse(await ev(`(() => JSON.stringify({ h: history.length, done: doneSet.size, toast: $('toast').textContent }))()`));
+await ev(`(() => { $('resetBtn').click(); return true; })()`);
+A = await pollRead(`(() => JSON.stringify({ h: history.length, done: doneSet.size, toast: $('toast').textContent }))()`, v => v.h === 0 && v.done === 3);
 ok('T4 Undo finish restores the run', A.h === 0 && A.done === 3 && /Finish undone/.test(A.toast));
 // T5: finish again, then delete returns to Previous cleans (the bug fix)
 await ev(`(() => { $('resetBtn').click(); return true; })()`); await sleep(300);
