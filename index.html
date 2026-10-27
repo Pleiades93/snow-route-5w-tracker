@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-title" content="Route 5W">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#14161c">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Route 5W — Snow Tracker</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
@@ -323,11 +325,11 @@ function loadJSON(k, def) { try { const v = JSON.parse(localStorage.getItem(k));
 const isObj = o => o && typeof o === 'object' && !Array.isArray(o);
 let notes = loadJSON(LS_NOTES_KEY, {}); if (!isObj(notes)) notes = {};
 let doneVia = loadJSON(LS_VIA_KEY, {}); if (!isObj(doneVia)) doneVia = {};
-let trail = loadJSON(LS_TRAIL_KEY, []); trail = Array.isArray(trail) ? trail.filter(p => Array.isArray(p) && p.length === 3) : [];
+let trail = loadJSON(LS_TRAIL_KEY, []); trail = Array.isArray(trail) ? trail.filter(p => Array.isArray(p) && p.length === 3 && Number.isFinite(p[0]) && Number.isFinite(p[1]) && Number.isFinite(p[2]) && Math.abs(p[0]) <= 90 && Math.abs(p[1]) <= 180) : [];   // ISSUE-04: finite + in-range coordinates only (a latitude of 999 used to survive)
 const covSet = {};
-(function () { const c = loadJSON(LS_COV_KEY, {}); if (isObj(c)) Object.keys(c).forEach(n => { if (ROADS[n] && Array.isArray(c[n])) covSet[n] = new Set(c[n]); }); })();
-function saveCov() { const o = {}; Object.keys(covSet).forEach(n => { if (covSet[n].size) o[n] = [...covSet[n]]; }); lsSet(LS_COV_KEY, JSON.stringify(o)); }
-function saveTrail() { lsSet(LS_TRAIL_KEY, JSON.stringify(trail)); }
+(function () { const c = loadJSON(LS_COV_KEY, {}); if (isObj(c)) Object.keys(c).forEach(n => { if (ROADS[n] && Array.isArray(c[n])) covSet[n] = new Set(c[n].filter(i => Number.isInteger(i) && i >= 0)); }); })();   // ISSUE-04: sample indices are non-negative integers
+function saveCov() { const o = {}; Object.keys(covSet).forEach(n => { if (covSet[n].size) o[n] = [...covSet[n]]; }); return lsSet(LS_COV_KEY, JSON.stringify(o)); }
+function saveTrail() { return lsSet(LS_TRAIL_KEY, JSON.stringify(trail)); }
 function saveAux() { lsSet(LS_NOTES_KEY, JSON.stringify(notes)); lsSet(LS_VIA_KEY, JSON.stringify(doneVia)); saveCov(); }
 function saveAll() { save(); saveTimes(); saveAux(); }
 
@@ -893,13 +895,18 @@ function doRestore() {
   const JSON_SHAPE = { [LS_KEY]: 'arr', [LS_TIMES_KEY]: 'obj', [LS_HIST_KEY]: 'arr', [LS_NOTES_KEY]: 'obj', [LS_VIA_KEY]: 'obj', [LS_TRAIL_KEY]: 'arr', [LS_COV_KEY]: 'obj', [LS_SIDES_KEY]: 'obj' };
   const entries = [];
   for (const k of backupKeys()) {
-    const v = parsed.data[k];
-    if (v === undefined) continue;
+    let v = parsed.data[k];
+    if (v === undefined) continue;   // Missing-key policy (README): a key absent from the backup leaves the current value untouched - restore replaces what the backup contains, it does not clear what it does not mention.
     if (typeof v !== 'string') { showToast('Backup has a bad value for ' + k + ' \u2014 nothing was changed'); return; }
     const shape = JSON_SHAPE[k];
     if (shape) {
       let pv; try { pv = JSON.parse(v); } catch (e) { showToast('Backup value for ' + k + ' is not valid JSON \u2014 nothing was changed'); return; }
-      if (shape === 'arr' ? !Array.isArray(pv) : !(pv && typeof pv === 'object' && !Array.isArray(pv))) { showToast('Backup value for ' + k + ' has the wrong shape \u2014 nothing was changed'); return; }
+      if (k === LS_KEY && pv && typeof pv === 'object' && !Array.isArray(pv)) {
+        // ISSUE-05 (audit 2): legacy format - the completion set was once an
+        // object map (street -> time). Migrate to the modern array, same rule
+        // the loader applies, so legitimate old backups still restore.
+        v = JSON.stringify(Object.keys(pv).filter(nm => pv[nm] && ROADS[nm]));
+      } else if (shape === 'arr' ? !Array.isArray(pv) : !(pv && typeof pv === 'object' && !Array.isArray(pv))) { showToast('Backup value for ' + k + ' has the wrong shape \u2014 nothing was changed'); return; }
     }
     entries.push([k, v]);
   }
@@ -909,12 +916,22 @@ function doRestore() {
   // mixed state (the old code wrote key-by-key and reloaded regardless).
   const snap = {};
   backupKeys().forEach(k => { snap[k] = localStorage.getItem(k); });
-  const rollback = () => backupKeys().forEach(k => { try { if (snap[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, snap[k]); } catch (e) {} });
+  // ISSUE-02 (audits 2 + 3): rollback is VERIFIED by reading every key back.
+  // The old version assumed the rollback worked and said so; on a double
+  // failure the message lied. Now the report matches what actually happened.
+  const rollback = () => {
+    let okBack = true;
+    backupKeys().forEach(k => {
+      try { if (snap[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, snap[k]); } catch (e) {}
+      if (localStorage.getItem(k) !== snap[k]) okBack = false;
+    });
+    return okBack;
+  };
   for (const pair of entries) {
     const k = pair[0], v = pair[1];
     if (!lsSet(k, v) || localStorage.getItem(k) !== v) {
-      rollback();
-      showToast('Restore failed while writing ' + k + ' \u2014 your current data was put back, nothing was changed');
+      if (rollback()) showToast('Restore failed while writing ' + k + ' \u2014 your current data was put back, nothing was changed');
+      else showToast('Restore failed while writing ' + k + ' \u2014 and your previous data could NOT be fully put back. Restore from a known-good backup');
       return;
     }
   }
@@ -1214,10 +1231,14 @@ function trailKm(sinceMs) {
   return d / 1000;
 }
 function flushAux(force) {
-  if (auxDirty) { saveCov(); auxDirty = false; }
+  // ISSUE-01 (audit 2): the pending flags clear ONLY when the write actually
+  // lands. The old code cleared them unconditionally, so one failed write
+  // (storage full) silently dropped GPS points and nothing ever retried.
+  // On failure the flags stay set and the next 15 s flush retries.
+  if (auxDirty && saveCov()) auxDirty = false;
   // The trail JSON is the big write (~250 KB at cap): at most every 45 s while recording,
   // but always when the page hides or closes (force), so a killed app loses almost nothing.
-  if (trailDirty && (force || Date.now() - lastTrailSave > 45000)) { saveTrail(); trailDirty = false; lastTrailSave = Date.now(); }
+  if (trailDirty && (force || Date.now() - lastTrailSave > 45000) && saveTrail()) { trailDirty = false; lastTrailSave = Date.now(); }
 }
 setInterval(flushAux, 15000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushAux(true); });
@@ -1242,6 +1263,10 @@ const SAMPLE_M = 15, COV_R = 22, COV_FRAC = 0.85;
     streets[n].pb = streets[n].bounds.pad(0.15);
   });
 })();
+// ISSUE-04 (audits 2 + 3): with the samples built, prune stored coverage
+// indices to each street's real sample count - an out-of-range index would
+// otherwise inflate the covered count and could fake a coverage suggestion.
+Object.keys(covSet).forEach(n => { const max = streets[n].samples.length; covSet[n] = new Set([...covSet[n]].filter(i => i < max)); });
 const dismissed = new Set(), sugAt = {};
 let suggestQueue = [], suggestShown = null;
 function showSuggest() {
@@ -1584,6 +1609,59 @@ map.on('click', closeMenu);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
 }
+
+// ===== OFFLINE MAP PREP (v5.42) =====
+// One time only, a few seconds after the first online load, the route area's
+// basemap tiles (day + night, zooms 13-15, 46 tiles for this route) are quietly requested
+// so the service worker caches them (it caches every Esri tile it serves) -
+// a later cold start with no signal then still shows the map under the
+// route. Plain Image() requests are all it takes; the prep flag in storage
+// records when it ran and how many tiles landed.
+const PREP_KEY = 'snow5w.prep.v1';
+function tileXY(lat, lng, z) {
+  const n = Math.pow(2, z);
+  const x = Math.floor((lng + 180) / 360 * n);
+  const la = lat * Math.PI / 180;
+  const y = Math.floor((1 - Math.log(Math.tan(la) + 1 / Math.cos(la)) / Math.PI) / 2 * n);
+  return [x, y];
+}
+function prepOfflineMaps() {
+  try { if (localStorage.getItem(PREP_KEY) || !navigator.onLine) return; } catch (e) { return; }
+  let minLa = 90, maxLa = -90, minLn = 180, maxLn = -180;
+  names.forEach(nm => streets[nm].segs.forEach(seg => seg.forEach(p => {
+    if (p[0] < minLa) minLa = p[0]; if (p[0] > maxLa) maxLa = p[0];
+    if (p[1] < minLn) minLn = p[1]; if (p[1] > maxLn) maxLn = p[1];
+  })));
+  const pad = 0.004;
+  minLa -= pad; minLn -= pad; maxLa += pad; maxLn += pad;
+  const urls = [];
+  [13, 14, 15].forEach(z => {
+    const a = tileXY(maxLa, minLn, z), b = tileXY(minLa, maxLn, z);
+    for (let x = a[0]; x <= b[0]; x++) for (let y = a[1]; y <= b[1]; y++) {
+      urls.push('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/' + z + '/' + y + '/' + x);
+      urls.push('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/' + z + '/' + y + '/' + x);
+    }
+  });
+  if (urls.length > 1200) return;   // sanity bound - this route needs 46
+  let i = 0, okCount = 0, active = 0;
+  const step = () => {
+    if (i >= urls.length && active === 0) {
+      try { localStorage.setItem(PREP_KEY, JSON.stringify({ at: new Date().toISOString(), count: okCount })); } catch (e) {}
+      if (okCount) showToast('Offline map saved for the route area (' + okCount + ' tiles)');
+      return;
+    }
+    while (active < 6 && i < urls.length) {
+      const u = urls[i++]; active++;
+      const im = new Image();
+      im.onload = () => { okCount++; active--; step(); };
+      im.onerror = () => { active--; step(); };
+      im.src = u;
+    }
+  };
+  step();
+  if (BASEMAP_MODE === 'vector') [GL_STYLES.day, GL_STYLES.night].forEach(u => fetch(u).catch(() => {}));   // warm the style files too; the worker caches them
+}
+setTimeout(prepOfflineMaps, 4000);
 
 refreshAll(); applyNight(); applyFlip(); checkStale();
 </script>

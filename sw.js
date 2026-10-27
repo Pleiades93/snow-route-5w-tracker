@@ -1,10 +1,10 @@
-// Route 5W service worker (v5.41, Leaflet build): lets the page open with NO
+// Route 5W service worker (v5.42, Leaflet build): lets the page open with NO
 // signal, and re-uses map data already fetched (vector styles/tiles/glyphs from
 // OpenFreeMap + CARTO, Esri fallback tiles, CDN libraries). Host this file in
 // the SAME folder as index.html, over https. Without it the page still works
 // online. Pattern carried from the v6 worker; the activate step deletes the
 // v6 worker's caches (snow5w-v6, snow5w-tiles-v2) so no stale v6 page survives.
-const CACHE = 'snow5w-shell-v541', TILES = 'snow5w-tiles-v3', MAX_TILES = 3000;
+const CACHE = 'snow5w-shell-v542', TILES = 'snow5w-tiles-v3', MAX_TILES = 3000;
 const CORE = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
@@ -29,10 +29,12 @@ async function netFirst(r, cacheName) {   // fresh when the network answers fast
     if (res && res.ok) { c.put(r, res.clone()); return res; }
     // Server answered with an error status (503 etc.): prefer a good cached copy
     // (BUG-03, ChatGPT audit #2) - surface the error only when nothing is cached.
-    const hitErr = await c.match(r, { ignoreSearch: true }) || await c.match(self.registration.scope);
+    // The app-shell fallback applies ONLY to page navigations (ISSUE-03,
+    // audit #2): a map style or data request must never be handed HTML.
+    const hitErr = await c.match(r, { ignoreSearch: true }) || (r.mode === 'navigate' ? await c.match(self.registration.scope) : undefined);
     return hitErr || res;
   } catch (e) {
-    const hit = await c.match(r, { ignoreSearch: true }) || await c.match(self.registration.scope);
+    const hit = await c.match(r, { ignoreSearch: true }) || (r.mode === 'navigate' ? await c.match(self.registration.scope) : undefined);
     return hit || Response.error();
   }
 }
@@ -43,11 +45,13 @@ async function cacheFirst(r, cacheName) {
   try {
     const res = await fetch(r);
     if (res && (res.ok || res.type === 'opaque')) {
-      await c.put(r.url || r, res.clone());
-      if (cacheName === TILES) {
-        const ks = await c.keys();
-        if (ks.length > MAX_TILES) await c.delete(ks[0]);
-      }
+      try {
+        await c.put(r.url || r, res.clone());
+        if (cacheName === TILES) {
+          const ks = await c.keys();
+          if (ks.length > MAX_TILES) await c.delete(ks[0]);
+        }
+      } catch (e) {}   // a failed cache write must not sink a good network response
     }
     return res;
   } catch (e) {
