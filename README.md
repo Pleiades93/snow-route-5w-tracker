@@ -24,8 +24,11 @@ truck, in the dark, with gloves-adjacent tapping and spotty signal.
 - Progress is stored **on the device only** (browser local storage). There is no
   server and no account; the backup/restore export is the way to move data.
 - Offline: after the first online open, the app quietly saves the route area's
-  map tiles (day + night) so a later cold start with no signal still shows the
-  map under the route.
+  Esri fallback tiles (day + night) and warms the vector style files, so a
+  later cold start with no signal still shows a map under the route. The
+  vector tiles themselves are cached as you view them. The one-time prep is
+  only marked done when tiles actually saved; a failed prep retries on the
+  next open.
 
 ## Backup & restore
 
@@ -50,7 +53,7 @@ truck, in the dark, with gloves-adjacent tapping and spotty signal.
 | `sw.js` | Service worker for the deployable build: offline open + tile caching. Must sit beside `index.html` on an https host. |
 | `tracker-source.html` | The canonical source build (raster basemap mode). Same app, same features; see *Build & parity* below. |
 | `manifest.json` | Home-screen install metadata (name, icons, full-screen launch). |
-| `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | App icons for the home screen. |
+| `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `icon-maskable-512.png` | App icons for the home screen; the maskable one is padded so round icon masks do not clip the snowflake. |
 
 ## Build & parity
 
@@ -60,9 +63,11 @@ two files are the basemap: `index.html` runs in vector mode with the MapLibre
 GL library tags injected; `tracker-source.html` runs the raster mode used for
 testing. On every release the script builds the deployable file, then reverses
 those known changes and asserts the result is byte-identical to the source —
-so any other difference fails the build. Parity was verified for v5.41 and
-v5.42. The check proves the two files carry identical app logic; it does not
-replace functional testing, which is done separately on every release.
+so any other difference fails the build. Parity is asserted on every build.
+The check proves the two files carry identical app logic; it does not
+replace functional testing, which is done separately on every release. The
+build also asserts that the service worker's library integrity hashes match
+the page tags exactly, so the two copies of those fingerprints cannot drift.
 
 ## Running it
 

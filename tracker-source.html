@@ -13,28 +13,30 @@
 <title>Route 5W — Snow Tracker</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; height: 100dvh; overflow: hidden; font-family: -apple-system, sans-serif; background: #14161c; }   /* 100dvh (v5.43): track the VISIBLE viewport on iOS Safari - plain 100% measures the tallest state and hid the app's bottom edge behind the browser toolbar */
-  :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); --sal: env(safe-area-inset-left, 0px); --sar: env(safe-area-inset-right, 0px); }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; height: 100dvh; overflow: hidden; font-family: -apple-system, sans-serif; background: #14161c; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; overscroll-behavior: none; }   /* v5.48: no web tells (selection, callout, rubber-band) */   /* 100dvh (v5.43): track the VISIBLE viewport on iOS Safari - plain 100% measures the tallest state and hid the app's bottom edge behind the browser toolbar */
+  :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); --sal: env(safe-area-inset-left, 0px); --sar: env(safe-area-inset-right, 0px);
+    /* v5.48: one surface system - every floating card shares colour, radius and shadow */
+    --card-op: rgba(26,29,36,.97); --rad-card: 14px; --rad-btn: 11px; --shadow-card: 0 4px 20px rgba(0,0,0,.45); --shadow-float: 0 4px 14px rgba(0,0,0,.4); }
   #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; background: #eceff2; }
   body.night #map { background: #14171d; }
   #hud {
     position: absolute; top: 0; left: 0; right: 0; z-index: 1000;
-    background: #14161c; color: #fff; padding: calc(10px + var(--sat)) calc(12px + var(--sar)) 12px calc(12px + var(--sal));   /* v5.44: solid header (was 93% opaque) - translucency over the map smeared the header text on iPhone */
+    background: #14161c; box-shadow: 0 1px 12px rgba(0,0,0,.35); color: #fff; padding: calc(10px + var(--sat)) calc(12px + var(--sar)) 12px calc(12px + var(--sal));   /* v5.44: solid header (was 93% opaque) - translucency over the map smeared the header text on iPhone */
   }
   #hud .row { display: flex; align-items: center; gap: 8px; }
-  #hud .title { font-weight: 700; font-size: 16px; white-space: nowrap; }
-  #hud .count { font-size: 13px; color: #cfe8d8; white-space: nowrap; }
+  #hud .title { font-weight: 700; font-size: 17px; white-space: nowrap; }
+  #hud .count { font-size: 14px; color: #cfe8d8; white-space: nowrap; }
   #hud .spacer { margin-left: auto; }
   #hud button {
-    background: #2c7be5; color: #fff; border: none; border-radius: 8px;
+    background: #2c7be5; color: #fff; border: none; border-radius: var(--rad-btn);
     padding: 9px 10px; font-size: 14px; font-weight: 600; min-height: 40px; white-space: nowrap;
   }
   #hud button.ghost { background: #444; }
   #hud button.armed { background: #d43a2f; }
   #hud button.undoing { background: #1e9e57; }
   #hud button.on { background: #2c7be5; }
-  @media (max-width: 430px) { #hud .title { font-size: 15px; } #hud .count { font-size: 12px; } #hud button { font-size: 13px; padding: 9px 8px; } }
+  @media (max-width: 430px) { #hud .title { font-size: 16px; } #hud .count { font-size: 13px; } #hud button { font-size: 13px; padding: 9px 8px; } }
   #bar { height: 5px; background: #3a3f47; border-radius: 3px; margin-top: 8px; overflow: hidden; }
   #barFill { height: 100%; width: 0%; background: #2ecc71; transition: width .3s; }
   #warn {
@@ -45,8 +47,9 @@
   .hidden { display: none; }
   #info {
     position: absolute; top: calc(96px + var(--sat)); right: calc(10px + var(--sar)); z-index: 1000; width: min(196px, 52vw);
-    background: rgba(20,22,28,.94); color: #fff; border-radius: 12px; padding: 8px;
-    box-shadow: 0 4px 16px rgba(0,0,0,.35);
+    background: var(--card-op); color: #fff; border-radius: var(--rad-card); padding: 8px;
+    border-top: 3px solid var(--accent, transparent);
+    box-shadow: var(--shadow-card);
     transition: opacity .15s ease, transform .15s ease; touch-action: manipulation;
   }
   #info.hidden { display: block; opacity: 0; pointer-events: none; transform: translateY(-8px); }
@@ -54,25 +57,26 @@
   #selStatus { font-size: 12px; margin: 3px 0 6px; color: #ddd; }
   #selStatus .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; }
   #selBtn {
-    width: 100%; min-height: 44px; border: none; border-radius: 10px;
+    width: 100%; min-height: 48px; border: none; border-radius: var(--rad-btn);
     font-size: 14px; font-weight: 700; color: #fff; background: #1e9e57;
   }
   #selBtn.undo { background: #555; }
   #selBtn:disabled { background: #3a3f47; color: #999; }
   #sheet {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 1100;
-    background: rgba(20,22,28,.97); color: #fff; max-height: 62%;
+    background: #1c1f27; color: #fff; max-height: 62%; box-shadow: 0 -6px 24px rgba(0,0,0,.4);
     display: flex; flex-direction: column; border-top: 1px solid #444;
     border-radius: 18px 18px 0 0; overflow: hidden;   /* v5.44: rounded sheet corners (Andrew) - the sheet had none */
     transform: translateY(100%); transition: transform .25s, visibility 0s .25s;
     visibility: hidden;   /* v5.44: the sheet exists ONLY while List is open (Andrew) - hidden outright when closed, not just slid away, so no sliver can peek on iOS overscroll */
   }
   #sheet.open { transform: translateY(0); visibility: visible; transition: transform .25s; }
-  #sheetHead { display: flex; align-items: center; gap: 8px; padding: 12px calc(14px + var(--sar)) 6px calc(14px + var(--sal)); font-weight: 700; font-size: 15px; }
-  #sheetHead button { background: #444; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; min-height: 40px; }
+  #sheetHandle { width: 38px; height: 5px; border-radius: 3px; background: #4a5058; margin: 8px auto 2px; flex-shrink: 0; }   /* v5.48: classic sheet affordance (visual - Close is still the mechanism) */
+  #sheetHead { display: flex; align-items: center; gap: 8px; padding: 8px calc(14px + var(--sar)) 6px calc(14px + var(--sal)); font-weight: 700; font-size: 15px; }
+  #sheetHead button { background: #444; color: #fff; border: none; border-radius: var(--rad-btn); padding: 8px 14px; font-size: 14px; font-weight: 600; min-height: 40px; }
   #sheetHead #exportBtn { margin-left: auto; background: #2c7be5; }
   #filters { display: flex; gap: 8px; padding: 4px calc(14px + var(--sar)) 8px calc(14px + var(--sal)); }
-  #filters button { flex: 1; background: #2c3440; color: #cbd2dc; border: none; border-radius: 8px; padding: 9px 0; font-size: 14px; font-weight: 600; min-height: 40px; }
+  #filters button { flex: 1; background: #2c3440; color: #cbd2dc; border: none; border-radius: var(--rad-btn); padding: 9px 0; font-size: 14px; font-weight: 600; min-height: 40px; }
   #filters button.on { background: #fff; color: #14161c; }
   #streetList { overflow-y: auto; padding: 0 calc(14px + var(--sar)) calc(18px + var(--sab)) calc(14px + var(--sal)); }
   #streetList .empty { padding: 18px 4px; color: #9aa4b2; font-size: 15px; }
@@ -92,17 +96,17 @@
      corner. Buttons keep their ids, so applyFlip/applyNight are untouched. */
   #menuWrap { position: absolute; right: calc(10px + var(--sar)); bottom: calc(30px + var(--sab)); z-index: 1001; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
   #menuBtn {
-    width: 46px; height: 46px; border: none; border-radius: 10px; cursor: pointer;
-    background: rgba(20,22,28,.94); box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    width: 46px; height: 46px; border: none; border-radius: 12px; cursor: pointer;
+    background: var(--card-op); box-shadow: var(--shadow-float);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
   }
   #menuBtn i { display: block; width: 22px; height: 3px; border-radius: 2px; background: #fff; }
   #menuDrop { display: flex; flex-direction: column; gap: 8px; }
   #menuDrop.hidden { display: none; }
   #menuDrop button {
-    min-height: 48px; min-width: 132px; padding: 12px 16px; border: none; border-radius: 10px; cursor: pointer;
-    background: rgba(20,22,28,.94); color: #fff; font-size: 15px; font-weight: 600; text-align: left;
-    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    min-height: 48px; min-width: 132px; padding: 12px 16px; border: none; border-radius: var(--rad-btn); cursor: pointer;
+    background: var(--card-op); color: #fff; font-size: 15px; font-weight: 600; text-align: left;
+    box-shadow: var(--shadow-float);
   }
   #menuDrop button.on { background: #6b4fd8; }
   /* Flip: the whole map (base tiles, streets, labels, GPS) rotates 180 degrees as one
@@ -114,16 +118,17 @@
   .refLabel span { display: inline-block; }
   #gpsBtn.on { background: #1a8cff; color: #fff; }
   #gpsBtn.paused { background: #f5a623; color: #fff; }
-  button { touch-action: manipulation; }
+  button { touch-action: manipulation; transition: transform .08s ease; }
+  button:active { transform: scale(.97); }   /* v5.48: native-feeling press feedback */
   #gpsBtn {
     position: absolute; left: calc(10px + var(--sal)); bottom: calc(16px + var(--sab)); z-index: 1000;
     width: 50px; height: 50px; border-radius: 50%; border: none;
-    background: #fff; font-size: 23px; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    background: #fff; font-size: 23px; box-shadow: var(--shadow-float);
   }
   #homeBtn {
     position: absolute; left: calc(68px + var(--sal)); bottom: calc(16px + var(--sab)); z-index: 1000;
     width: 50px; height: 50px; border-radius: 50%; border: none;
-    background: #fff; font-size: 21px; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    background: #fff; font-size: 21px; box-shadow: var(--shadow-float);
   }
   .leaflet-bottom.leaflet-left .leaflet-control-attribution {
     margin: 0 0 calc(4px + var(--sab)) calc(68px + var(--sal)); font-size: 9px; background: rgba(255,255,255,.7);
@@ -148,19 +153,19 @@
   .refLabel::before { display: none; }
   #toast {
     position: absolute; left: 50%; bottom: calc(156px + var(--sab)); transform: translateX(-50%) translateY(8px);
-    z-index: 1200; background: rgba(20,22,28,.95); color: #fff; font-size: 14px; font-weight: 600;
-    padding: 10px 16px; border-radius: 10px; opacity: 0; pointer-events: none;
+    z-index: 1200; background: var(--card-op); color: #fff; font-size: 14px; font-weight: 600;
+    padding: 10px 16px; border-radius: 12px; opacity: 0; pointer-events: none;
     transition: opacity .2s ease, transform .2s ease;
-    max-width: 86vw; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,.35);
+    max-width: 86vw; text-align: center; box-shadow: var(--shadow-card);
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   #xport { position: absolute; inset: 0; z-index: 1300; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; padding: 16px; }
   #xport.hidden { display: none; }
   #xport .card { background: #1b1f27; color: #fff; border-radius: 14px; padding: 14px; width: min(520px, 100%); }
   #xport .ttl { font-weight: 700; font-size: 16px; margin-bottom: 8px; }
-  #xText { width: 100%; height: 42vh; background: #0f1217; color: #dfe6ee; border: 1px solid #333; border-radius: 8px; padding: 8px; font: 12px/1.4 ui-monospace, Menlo, monospace; resize: none; }
+  #xText { width: 100%; height: 42vh; background: #0f1217; color: #dfe6ee; border: 1px solid #333; border-radius: 8px; padding: 8px; font: 12px/1.4 ui-monospace, Menlo, monospace; resize: none; user-select: text; -webkit-user-select: text; }
   #xport .xrow { display: flex; gap: 8px; margin-top: 10px; }
-  #xport .xrow button { flex: 1; min-height: 48px; border: none; border-radius: 10px; background: #444; color: #fff; font-size: 15px; font-weight: 600; }
+  #xport .xrow button { flex: 1; min-height: 48px; border: none; border-radius: var(--rad-btn); background: #444; color: #fff; font-size: 15px; font-weight: 600; }
   #xport .xrow button.pri { background: #2c7be5; }
   #stats { font-size: 12px; color: #aab4c2; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
   #pacePanel { margin-top: 8px; border-top: 1px solid #3a3f47; padding-top: 8px; font-size: 13px; color: #c9d3e0; line-height: 1.45; }
@@ -175,15 +180,15 @@
   #pacePanel .onpace { color: #ffd24a; font-weight: 700; }
   #pacePanel .phint { color: #8fa0b3; }
   #spd { position: absolute; left: calc(10px + var(--sal)); bottom: calc(74px + var(--sab)); z-index: 1000; background: rgba(20,22,28,.9); color: #fff; font-size: 13px; font-weight: 700; padding: 6px 9px; border-radius: 8px; }
-  #suggest { position: absolute; left: calc(10px + var(--sal)); right: calc(10px + var(--sar)); bottom: calc(74px + var(--sab)); z-index: 1000; background: rgba(20,22,28,.96); color: #fff; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+  #suggest { position: absolute; left: calc(10px + var(--sal)); right: calc(10px + var(--sar)); bottom: calc(74px + var(--sab)); z-index: 1000; background: var(--card-op); color: #fff; border-radius: var(--rad-card); padding: 10px 12px; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-card); }
   #suggest.hidden { display: none; }
   #suggest span { flex: 1; font-weight: 700; font-size: 15px; }
-  #suggest button { min-height: 48px; border: none; border-radius: 10px; padding: 0 14px; font-size: 15px; font-weight: 700; color: #fff; background: #1e9e57; }
+  #suggest button { min-height: 48px; border: none; border-radius: var(--rad-btn); padding: 0 14px; font-size: 15px; font-weight: 700; color: #fff; background: #1e9e57; }
   #suggest #sugNo { background: #444; }
-  #stale { position: absolute; left: calc(10px + var(--sal)); right: calc(10px + var(--sar)); bottom: calc(74px + var(--sab)); z-index: 1001; background: rgba(20,22,28,.96); color: #fff; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+  #stale { position: absolute; left: calc(10px + var(--sal)); right: calc(10px + var(--sar)); bottom: calc(74px + var(--sab)); z-index: 1001; background: var(--card-op); color: #fff; border-radius: var(--rad-card); padding: 10px 12px; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-card); }
   #stale.hidden { display: none; }
   #stale span { flex: 1; font-weight: 700; font-size: 15px; }
-  #stale button { min-height: 48px; border: none; border-radius: 10px; padding: 0 14px; font-size: 15px; font-weight: 700; color: #fff; background: #1e9e57; }
+  #stale button { min-height: 48px; border: none; border-radius: var(--rad-btn); padding: 0 14px; font-size: 15px; font-weight: 700; color: #fff; background: #1e9e57; }
   #stale #staleNo { background: #444; }
 </style>
 </head>
@@ -222,6 +227,7 @@
 <div id="stale" class="hidden"><span id="staleText"></span><button id="staleYes">Archive &amp; start new</button><button id="staleNo">Keep</button></div>
 <div id="toast"></div>
 <div id="sheet">
+  <div id="sheetHandle"></div>
   <div id="sheetHead">Streets<button id="exportBtn">Export</button><button id="sheetClose">Close</button></div>
   <div id="filters"><button data-f="all" class="on">All</button><button data-f="todo">To do</button><button data-f="done">Done</button></div>
   <div id="streetList"></div>
@@ -275,11 +281,15 @@ $('warn').onclick = () => showToast('This browser is blocking storage. Open the 
 try { localStorage.setItem('snow5w.probe', '1'); localStorage.removeItem('snow5w.probe'); } catch (e) { flagStorage(); }
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 
+// SEC-3 (external audit, 2026-10-27): street-name gates must test OWNERSHIP,
+// not truthiness - ROADS["constructor"] is truthy through the prototype chain,
+// so a crafted record could smuggle fake streets past every check below.
+const isStreet = n => Object.prototype.hasOwnProperty.call(ROADS, n);
 let doneSet = new Set();
 try {
   const raw = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
-  if (Array.isArray(raw)) raw.forEach(n => { if (ROADS[n]) doneSet.add(n); });
-  else if (raw && typeof raw === 'object') Object.keys(raw).forEach(n => { if (raw[n] && ROADS[n]) doneSet.add(n); });
+  if (Array.isArray(raw)) raw.forEach(n => { if (isStreet(n)) doneSet.add(n); });
+  else if (raw && typeof raw === 'object') Object.keys(raw).forEach(n => { if (raw[n] && isStreet(n)) doneSet.add(n); });
 } catch (e) { doneSet = new Set(); }
 let doneTimes = {};
 try {
@@ -288,7 +298,7 @@ try {
 } catch (e) { doneTimes = {}; }
 // BUG-04 (ChatGPT audit #2): drop completion times that are not real timestamps or
 // not for a route street, so one bad record cannot poison formatting or pace math.
-Object.keys(doneTimes).forEach(n => { if (!ROADS[n] || isNaN(Date.parse(doneTimes[n]))) delete doneTimes[n]; });
+Object.keys(doneTimes).forEach(n => { if (!isStreet(n) || typeof doneTimes[n] !== 'string' || isNaN(Date.parse(doneTimes[n]))) delete doneTimes[n]; });   // SEC-3 + SEC-9b: a numeric time used to survive and render as 1970
 // Archive of earlier runs: Reset moves the finished run here instead of destroying it (last 10 kept).
 let history = [];
 try {
@@ -299,7 +309,7 @@ try {
 // parseable date and an items object; inside items, only route streets with a
 // parseable (or null) time survive. Valid runs are recovered, never all discarded.
 history = history.filter(h => h && typeof h === 'object' && !Array.isArray(h) && typeof h.at === 'string' && !isNaN(Date.parse(h.at)) && h.items && typeof h.items === 'object' && !Array.isArray(h.items));
-history.forEach(h => Object.keys(h.items).forEach(n => { if (!ROADS[n] || (h.items[n] !== null && isNaN(Date.parse(h.items[n])))) delete h.items[n]; }));
+history.forEach(h => Object.keys(h.items).forEach(n => { if (!isStreet(n) || (h.items[n] !== null && (typeof h.items[n] !== 'string' || isNaN(Date.parse(h.items[n]))))) delete h.items[n]; }));   // SEC-3 + SEC-9b, same gates as doneTimes
 // The current run's TRUE start (epoch ms), stamped by the Start clean button in the Pace
 // panel. 0 = not started; paceInfo then falls back to the first completed street, as before.
 let runStart = 0;
@@ -323,10 +333,15 @@ const dist = (a, b) => Math.hypot((b[1] - a[1]) * MLNG, (b[0] - a[0]) * MLAT);
 function loadJSON(k, def) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch (e) { return def; } }
 const isObj = o => o && typeof o === 'object' && !Array.isArray(o);
 let notes = loadJSON(LS_NOTES_KEY, {}); if (!isObj(notes)) notes = {};
+// SEC-2 (external audit, 2026-10-27): normalize the flags store to its real
+// shape - {street: [{k, at}]}. A street whose value was a string used to reach
+// flagText's .map and throw, which killed the whole Export/Backup/Restore
+// panel (they share it) exactly when a restore was needed.
+Object.keys(notes).forEach(n => { if (!isStreet(n) || !Array.isArray(notes[n])) delete notes[n]; else notes[n] = notes[n].filter(f => f && typeof f === 'object' && typeof f.k === 'string'); });
 let doneVia = loadJSON(LS_VIA_KEY, {}); if (!isObj(doneVia)) doneVia = {};
-let trail = loadJSON(LS_TRAIL_KEY, []); trail = Array.isArray(trail) ? trail.filter(p => Array.isArray(p) && p.length === 3 && Number.isFinite(p[0]) && Number.isFinite(p[1]) && Number.isFinite(p[2]) && Math.abs(p[0]) <= 90 && Math.abs(p[1]) <= 180) : [];   // ISSUE-04: finite + in-range coordinates only (a latitude of 999 used to survive)
+let trail = loadJSON(LS_TRAIL_KEY, []); trail = Array.isArray(trail) ? trail.filter(p => Array.isArray(p) && p.length === 3 && Number.isFinite(p[0]) && Number.isFinite(p[1]) && Number.isFinite(p[2]) && p[2] >= 946684800 && p[2] <= 4102444800 && Math.abs(p[0]) <= 90 && Math.abs(p[1]) <= 180) : [];   // SEC-9a: the timestamp is bounded too (2000-2100) - 1e300 used to pass and crash the GPX export's toISOString()   // ISSUE-04: finite + in-range coordinates only (a latitude of 999 used to survive)
 const covSet = {};
-(function () { const c = loadJSON(LS_COV_KEY, {}); if (isObj(c)) Object.keys(c).forEach(n => { if (ROADS[n] && Array.isArray(c[n])) covSet[n] = new Set(c[n].filter(i => Number.isInteger(i) && i >= 0)); }); })();   // ISSUE-04: sample indices are non-negative integers
+(function () { const c = loadJSON(LS_COV_KEY, {}); if (isObj(c)) Object.keys(c).forEach(n => { if (isStreet(n) && Array.isArray(c[n])) covSet[n] = new Set(c[n].filter(i => Number.isInteger(i) && i >= 0)); }); })();   // ISSUE-04: sample indices are non-negative integers
 function saveCov() { const o = {}; Object.keys(covSet).forEach(n => { if (covSet[n].size) o[n] = [...covSet[n]]; }); return lsSet(LS_COV_KEY, JSON.stringify(o)); }
 function saveTrail() { return lsSet(LS_TRAIL_KEY, JSON.stringify(trail)); }
 function saveAux() { lsSet(LS_NOTES_KEY, JSON.stringify(notes)); lsSet(LS_VIA_KEY, JSON.stringify(doneVia)); saveCov(); }
@@ -707,19 +722,21 @@ function styleStreet(name) {
 }
 
 function updateCount() {
-  $('count').textContent = doneSet.size + ' of ' + TOTAL + ' completed';
+  $('count').textContent = doneSet.size + ' of ' + TOTAL + ' completed \u00b7 ' + (TOTAL ? Math.round(doneSet.size / TOTAL * 100) : 0) + '%';   // v5.48: percentage at a glance
   $('barFill').style.width = (TOTAL ? (doneSet.size / TOTAL * 100) : 0) + '%';
   updateStats();
 }
 function renderPanel() {
   const nameEl = $('selName'), stEl = $('selStatus'), btn = $('selBtn');
   if (!selected) {
+    $('info').style.setProperty('--accent', 'transparent');
     nameEl.textContent = 'No street selected';
     stEl.textContent = 'Tap a street on the map';
     btn.disabled = true; btn.textContent = 'Mark completed'; btn.className = '';
     return;
   }
   nameEl.textContent = selected;
+  $('info').style.setProperty('--accent', doneSet.has(selected) ? GREEN : pendingColor(selected));   // v5.48: the panel's top edge carries the street's own colour
   btn.disabled = false;
   if (doneSet.has(selected)) {
     const t = doneTimes[selected], doneAt = t ? fmtWhen(t) : '';
@@ -825,7 +842,7 @@ $('listBtn').onclick = () => $('sheet').classList.toggle('open');
 $('sheetClose').onclick = () => $('sheet').classList.remove('open');
 
 // ===== EXPORT (proof of work you can get OUT of the phone) =====
-function flagText(n) { return (notes[n] || []).map(f => (FLAGS[f.k] || f.k) + (f.at ? ' ' + fmtClock(new Date(f.at)) : '')).join('; '); }
+function flagText(n) { return (Array.isArray(notes[n]) ? notes[n] : []).map(f => (FLAGS[f.k] || f.k) + (f.at ? ' ' + fmtClock(new Date(f.at)) : '')).join('; '); }
 function buildReport() {
   const byTime = m => (a, b) => String(m[a] || '').localeCompare(String(m[b] || ''));
   const ts = [...doneSet].map(n => Date.parse(doneTimes[n])).filter(t => !isNaN(t)).sort((a, b) => a - b);
@@ -934,6 +951,7 @@ function doRestore() {
       return;
     }
   }
+  restoring = true; trailDirty = false; auxDirty = false;   // SEC-4: the reload below fires pagehide, whose flush would otherwise write the OLD in-memory trail/coverage over the data just restored
   showToast('Backup restored \u2014 reloading');
   setTimeout(() => location.reload(), 600);
 }
@@ -1229,7 +1247,9 @@ function trailKm(sinceMs) {
   }
   return d / 1000;
 }
+let restoring = false;   // SEC-4 (external audit, 2026-10-27): set by doRestore; while true, flushes are refused so the restore's own reload cannot clobber it
 function flushAux(force) {
+  if (restoring) return;
   // ISSUE-01 (audit 2): the pending flags clear ONLY when the write actually
   // lands. The old code cleared them unconditionally, so one failed write
   // (storage full) silently dropped GPS points and nothing ever retried.
@@ -1645,7 +1665,7 @@ function prepOfflineMaps() {
   let i = 0, okCount = 0, active = 0;
   const step = () => {
     if (i >= urls.length && active === 0) {
-      try { localStorage.setItem(PREP_KEY, JSON.stringify({ at: new Date().toISOString(), count: okCount })); } catch (e) {}
+      if (okCount > 0) { try { localStorage.setItem(PREP_KEY, JSON.stringify({ at: new Date().toISOString(), count: okCount })); } catch (e) {} }   // SEC-6a: a fully failed prep used to mark itself done and never retry
       if (okCount) showToast('Offline map saved for the route area (' + okCount + ' tiles)');
       return;
     }
