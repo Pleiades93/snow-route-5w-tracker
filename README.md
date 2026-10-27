@@ -5,10 +5,9 @@ Built for one operator working a route of 34 streets: tap a street, mark it (or 
 left / right side), and the map, pace clock and history stay in step — designed to be used
 from a phone in a truck, in the dark, with gloves-adjacent tapping and spotty signal.
 
-## Live copies
+## Live
 
-- **Netlify (vector maps + real offline):** https://snow-route-5w.netlify.app/
-- **Muse (fallback host):** https://muse.ai/s/snow-route-5w-tracker-xvxe6xjxoxixvxlxlxexd/zf3mdDG-JK2nxp2rwQ_vuBjuR1jvkiIJN4XxfMxYUC4
+- **GitHub Pages (main host):** https://pleiades93.github.io/snow-route-5w-tracker/
 
 ## What it does
 
@@ -27,16 +26,16 @@ from a phone in a truck, in the dark, with gloves-adjacent tapping and spotty si
 
 | File | What it is |
 |---|---|
-| `index.html` | The deployable build: vector basemap (OpenFreeMap by day, CARTO dark at night) via MapLibre GL under Leaflet, with automatic fallback to Esri raster tiles if the vector source fails. This is what Netlify serves. |
+| `index.html` | The deployable build: vector basemap (OpenFreeMap by day, CARTO dark at night) via MapLibre GL under Leaflet, with automatic fallback to Esri raster tiles if the vector source fails. This is what GitHub Pages serves. |
 | `sw.js` | Service worker for the deployable build: offline open + tile caching. Must sit beside `index.html` on an https host. |
 | `tracker-source.html` | The canonical source build (raster basemap mode). Same app, same features; the two builds differ by one mode string plus the MapLibre tags. |
-| `build-netlify.py` | Turns `tracker-source.html` into the deployable `index.html` (mode flip + tag injection) and zips it with `sw.js`. The bundle is never hand-edited. |
 | `v6-index.html`, `v6-sw.js` | The retired v6 experiment (full MapLibre rewrite), kept for reference. |
 
 ## Running it
 
-Open `index.html` from any static https host (Netlify Drop works: drag the folder
-in). Without `sw.js` beside it, everything works except the offline open.
+This repo is the main source. GitHub Pages serves `index.html` straight from the
+`main` branch — pushing an updated `index.html` (with `sw.js` beside it) is the
+whole deploy. Without `sw.js` beside it, everything works except the offline open.
 
 Map data © OpenStreetMap contributors; vector styles © OpenFreeMap / © CARTO;
 fallback imagery-style tiles © Esri.
