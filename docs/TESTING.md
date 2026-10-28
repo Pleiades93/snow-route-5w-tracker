@@ -66,6 +66,16 @@ Coverage:
 - `drive116` — the stamped build under its own Content-Security-Policy:
   the app boots with zero policy violations of its own, while an
   injected inline script and a foreign-host script are both refused.
+- `drive117` — the service-worker upgrade lifecycle on a real local
+  origin (the long-standing SW-02 gap): the app is served over HTTP from
+  a per-run fixture (v1 = the shipped files; v2 = a bumped version label
+  and shell cache name; the library CDNs are mirrored locally with
+  byte-identical, SRI-verified files), the worker registers, activates
+  and controls the page, and the app's own Update flow hands off to v2 —
+  new shell cache in, old one deleted, the tiles cache and the marked
+  route progress intact. Needs network access to download the five
+  library files (verified against the SRI hashes in `src/sw.js`) and
+  `openssl` to mint the mirror certificate.
 
 Running locally:
 
