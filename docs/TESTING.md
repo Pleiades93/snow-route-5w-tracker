@@ -3,15 +3,18 @@
 ## Commands (run in CI on every push)
 
 ```
-python3 scripts/build-pages.py --check   # generated files match source; parity + SRI integrity
+python3 scripts/build-pages.py --check   # generated files match source; parity + SRI integrity + CSP stamp
 node tests/sw.test.mjs                   # service worker fetch-strategy tests
 node tests/browser/run.mjs               # deterministic browser drives (second CI job)
 node tests/browser/selftest-runner.mjs   # proves the runner's own verdicts (exit code, timeout)
 ```
 
 The build check rebuilds `index.html` from `src/tracker-source.html` in
-memory and fails if the committed file differs, if parity breaks, or if the
-service worker's integrity hashes drift from the page tags.
+memory and fails if the committed file differs, if parity breaks, if the
+service worker's integrity hashes drift from the page tags, or if the
+page's stamped Content-Security-Policy (see `scripts/csp_stamp.py`) does
+not match a fresh hash computation over the built page's own inline
+script and style — a code change can never ship under a stale policy.
 
 The service worker suite runs the worker's `cacheFirst` / `netFirst`
 functions in Node with mocked caches and fetch — 14 cases: cache hits,
@@ -56,6 +59,13 @@ Coverage:
   loads with its state exact, gains no fabricated per-side timestamps,
   keeps the work meter and pace inputs honest, and survives a
   backup/restore round-trip unchanged.
+- `drive115` — the map-failure notice (v5.81): with every tile request
+  refused, the notice appears, streets and marking keep working, the
+  first successful tile clears it, dismissal sticks for the session, and
+  the banner's layout is measured in both themes.
+- `drive116` — the stamped build under its own Content-Security-Policy:
+  the app boots with zero policy violations of its own, while an
+  injected inline script and a foreign-host script are both refused.
 
 Running locally:
 

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha384-wpX4/G3HQ+xpq6P6gtRJngwYPxkF0WGWntx5SJdIZ4TOsHtiL/4viSyI53v2axK+' https://unpkg.com https://cdn.jsdelivr.net; style-src-elem 'sha384-sdt9vdU+ldu4xg6TdpuAn1cr6yWajIvdoqnXkVApEg04GTajtZryUWyIKnFmmyJm' https://unpkg.com https://cdn.jsdelivr.net; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://tiles.openfreemap.org https://basemaps.cartocdn.com https://unpkg.com https://cdn.jsdelivr.net; connect-src 'self' https://server.arcgisonline.com https://tiles.openfreemap.org https://basemaps.cartocdn.com https://unpkg.com https://cdn.jsdelivr.net; worker-src blob:; child-src blob:; font-src 'none'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -159,7 +160,7 @@
      Transform/opacity only, so nothing shifts layout; reduced-motion off. */
   @keyframes dropIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes bannerIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  #suggest:not(.hidden), #stale:not(.hidden), #bakNudge:not(.hidden) { animation: bannerIn .2s ease-out; }
+  #suggest:not(.hidden), #stale:not(.hidden), #bakNudge:not(.hidden), #mapNote:not(.hidden) { animation: bannerIn .2s ease-out; }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
   /* Flip: the whole map (base tiles, streets, labels, GPS) rotates 180 degrees as one
      rigid piece, so geography and the split halves stay exact; the street-name labels
@@ -277,13 +278,18 @@
   #bakNudge span { flex: 1; font-weight: 700; font-size: 15px; }
   #bakNudge button { min-height: 48px; border: none; border-radius: var(--rad-btn); padding: 0 14px; font-size: 15px; font-weight: 700; color: #fff; background: #1e9e57; white-space: nowrap; }
   #bakNudge #bakLater { background: #e63a2e; }   /* v5.76: red exit family (Andrew) */
+  #mapNote { position: absolute; left: calc(10px + var(--sal)); right: calc(10px + var(--sar)); bottom: calc(78px + var(--sab)); z-index: 1003; background: var(--card-op); color: #fff; border-radius: var(--rad-card); padding: 10px 12px; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-card); }
+  /* v5.81: bottom is 78px, 4px above the sibling banners' slot - at 74px the two-line notice's lower edge grazed the gear button's top edge by 2px (drive115 measurement). */
+  #mapNote.hidden { display: none; }
+  #mapNote span { flex: 1; font-weight: 700; font-size: 15px; }
+  #mapNote button { min-height: 48px; border: none; border-radius: var(--rad-btn); padding: 0 14px; font-size: 15px; font-weight: 700; color: #fff; background: #e63a2e; white-space: nowrap; }   /* v5.81: the notice's only button is a dismiss - red exit family */
 </style>
 </head>
 <body>
 <div id="map"></div>
 <div id="hud">
   <div class="row">
-    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.79</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
+    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.81</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
     <div class="count" id="count"></div>
     <div class="spacer"></div>
     <button id="listBtn">List</button>
@@ -314,6 +320,7 @@
 <div id="suggest" class="hidden"><span id="sugText"></span><button id="sugYes">Show street</button><button id="sugNo">Not yet</button></div>
 <div id="stale" class="hidden"><span id="staleText"></span><button id="staleYes">Archive &amp; start new</button><button id="staleNo">Keep</button></div>
 <div id="bakNudge" class="hidden"><span id="bakText"></span><button id="bakSave">Save backup</button><button id="bakLater">Not now</button></div>
+<div id="mapNote" class="hidden"><span>Maps can&#8217;t load &#8212; streets, GPS and marking still work. Check your connection.</span><button id="mapNoteNo">Dismiss</button></div>
 <div id="toast"></div>
 <div id="sheet">
   <div id="sheetHandle"></div>
@@ -532,13 +539,33 @@ L.control.attribution({ position: 'bottomleft', prefix: false })
 // blank map because a vector source is down.
 const BASEMAP_MODE = 'vector';
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+// v5.81: total-basemap-failure notice state. Every raster layer is created
+// through esriLayer below, so its tile events are the one reliable signal
+// in BOTH builds: in the vector build the Esri layers only exist when the
+// GL base has already failed (glFailed), so a healthy GL map can never
+// trip this; in the raster build they are the map. The notice means "not
+// one basemap tile has ever loaded and requests are failing" - a partial
+// outage (some tiles in) never shows it, and the first successful tile
+// after a failure hides it again. Dismissal is per-session: relaunching
+// with a still-dead map re-warns.
+let tilesOk = 0, tilesBad = 0, glOk = false, mapNoteShown = false, mapNoteOff = false;
+function noteMapState() {
+  const dead = tilesBad >= 4 && tilesOk === 0 && !glOk;
+  const el = $('mapNote');
+  if (!el) return;
+  if (dead && !mapNoteOff && !mapNoteShown) { el.classList.remove('hidden'); mapNoteShown = true; }
+  else if (!dead && mapNoteShown) { el.classList.add('hidden'); mapNoteShown = false; }
+}
 function esriLayer(path, nativeZoom) {
   // v5.74: updateWhenIdle OFF - by default on phones the layer waits for the
   // pan to stop before asking for the newly revealed tiles, so every stop
   // started loading from zero. Now tiles load while the pan is still moving
   // (the layer's own 200 ms move throttle keeps it sane) and are mostly
   // there when the finger lifts.
-  return L.tileLayer(ESRI + path + '/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: nativeZoom, updateWhenIdle: false });
+  const ly = L.tileLayer(ESRI + path + '/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: nativeZoom, updateWhenIdle: false });
+  ly.on('tileload', () => { tilesOk++; noteMapState(); });
+  ly.on('tileerror', () => { tilesBad++; noteMapState(); });
+  return ly;
 }
 const BASEMAPS = {
   day:   [['Canvas/World_Light_Gray_Base', 16]],
@@ -573,7 +600,7 @@ function setBasemap() {
       tileLayer.addLayer(layer);
       const gl = layer.getMaplibreMap();
       let loaded = false;
-      gl.on('load', () => { loaded = true; glHideLabels(gl); });
+      gl.on('load', () => { loaded = true; glOk = true; noteMapState(); glHideLabels(gl); });
       gl.on('error', () => { if (!loaded && glLayer === layer) { glFailed = true; setBasemap(); } });
       setTimeout(() => { if (!loaded && glLayer === layer) { glFailed = true; setBasemap(); } }, 12000);
       return;
@@ -1657,6 +1684,7 @@ async function saveBackupFile() {
 }
 $('bakSave').onclick = () => { saveBackupFile(); };
 $('bakLater').onclick = () => { try { const s = exportState(); s.snooze = new Date(Date.now() + 7 * 864e5).toISOString(); localStorage.setItem(LS_EXPORT_KEY, JSON.stringify(s)); } catch (e) {} hideBakNudge(); };
+$('mapNoteNo').onclick = () => { mapNoteOff = true; mapNoteShown = false; $('mapNote').classList.add('hidden'); };   // v5.81
 let clrArmed = false, clrTimer = null;
 $('xClr').onclick = () => {
   if (!clrArmed) {

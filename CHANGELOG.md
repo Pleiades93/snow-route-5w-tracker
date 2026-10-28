@@ -4,6 +4,9 @@ User-facing changes and important reliability fixes. Versions are the
 in-app labels (header, under "Route 5W"). This changelog starts at v5.47;
 earlier history is in the git log.
 
+## v5.81 — 2026-10-28
+If every map source fails at once (no signal and nothing cached), the app now says so instead of sitting on a blank grey background: a dismissible notice — "Maps can't load — streets, GPS and marking still work. Check your connection." — appears once tile requests have failed with not one tile loaded, and clears itself the moment a tile gets through. Streets, GPS, pace and marking were never affected by a dead basemap; now the app explains the situation instead of leaving it ambiguous. (The one new item from the 2026-10-28 second-opinion audit.)
+
 ## v5.79 — 2026-10-27
 Consecutive same-side green edges now join across stretch boundaries: when the stretch next door has the same side done, a side's green edge runs untrimmed right to the shared boundary, so a run of finished stretches reads as one continuous green line down that side of the road. An isolated finished stretch keeps its small end trims and floats on its own, exactly as before. Verified by a full trace audit (drive111) over all 34 streets: every centreline point sits on the road's true geometry, every green edge rides at the intended 6 px offset on the correct physical side, joins measure closed, and no line overshoots its road.
 

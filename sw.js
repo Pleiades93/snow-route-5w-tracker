@@ -4,7 +4,7 @@
 // the SAME folder as index.html, over https. Without it the page still works
 // online. Pattern carried from the v6 worker; the activate step deletes the
 // v6 worker's caches (snow5w-v6, snow5w-tiles-v2) so no stale v6 page survives.
-const CACHE = 'snow5w-shell-v579', TILES = 'snow5w-tiles-v3', MAX_TILES = 3000;
+const CACHE = 'snow5w-shell-v581', TILES = 'snow5w-tiles-v3', MAX_TILES = 3000;
 // SEC-1 (external audit, 2026-10-27): the library files are cached ONLY
 // through integrity-checked fetches. The old c.add(url) stored ANY ok
 // response - a captive-portal page cached as leaflet.js would then be
