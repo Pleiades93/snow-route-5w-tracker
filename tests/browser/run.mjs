@@ -2,8 +2,12 @@
 // their results. Each drive boots the app in headless Chromium (via the
 // Chrome DevTools Protocol, Node built-ins only), prints a JSON block
 //   { checks: [[name, passed], ...], exceptions: <count> }
-// as its final output, and always exits 0 - so the verdict is computed
-// here from that block: every check passed and zero page exceptions.
+// as its final output. The verdict is computed here and requires ALL of:
+// a parseable result block, every check passed, zero page exceptions, and
+// the child exiting with code 0. A drive that prints a passing block and
+// then terminates abnormally FAILS (audit finding T-01, 2026-10-28), and a
+// drive that never finishes is killed at the timeout and FAILS.
+// tests/browser/selftest-runner.mjs proves each of these verdicts.
 //
 // Usage:
 //   node tests/browser/run.mjs              # all drives
@@ -15,18 +19,18 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ALL = ['drive65', 'drive66', 'drive83', 'drive86', 'drive88', 'drive89'];
+const ALL = ['drive65', 'drive66', 'drive83', 'drive86', 'drive88', 'drive89', 'drive114'];
 const names = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
-const TIMEOUT_MS = 300000;
+const TIMEOUT_MS = Number(process.env.RUNNER_TIMEOUT_MS) || 300000;
 
 function runOne(name) {
   return new Promise(resolve => {
     const p = spawn(process.execPath, [path.join(HERE, name + '.mjs')], { cwd: HERE, env: process.env });
-    let out = '', err = '';
-    const timer = setTimeout(() => p.kill('SIGKILL'), TIMEOUT_MS);
+    let out = '', err = '', timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; p.kill('SIGKILL'); }, TIMEOUT_MS);
     p.stdout.on('data', d => { out += d; });
     p.stderr.on('data', d => { err += d; });
-    p.on('close', code => { clearTimeout(timer); resolve({ name, code, out, err }); });
+    p.on('close', code => { clearTimeout(timer); resolve({ name, code, out, err, timedOut }); });
   });
 }
 
@@ -41,6 +45,11 @@ function parseResults(out) {
 let allPass = true;
 for (const name of names) {
   const r = await runOne(name);
+  if (r.timedOut) {
+    console.log(`${name}: FAIL - timed out after ${TIMEOUT_MS}ms and was killed`);
+    allPass = false;
+    continue;
+  }
   const R = parseResults(r.out);
   if (!R || !Array.isArray(R.checks)) {
     console.log(`${name}: FAIL - no result block (exit ${r.code})` + (r.err ? `\n  stderr: ${r.err.slice(0, 300)}` : ''));
@@ -49,9 +58,9 @@ for (const name of names) {
   }
   const failed = R.checks.filter(c => !c[1]);
   const exc = Array.isArray(R.exceptions) ? R.exceptions.length : (R.exceptions ?? 0);
-  const pass = failed.length === 0 && exc === 0;
+  const pass = r.code === 0 && failed.length === 0 && exc === 0;
   if (!pass) allPass = false;
-  console.log(`${name}: ${R.checks.length - failed.length}/${R.checks.length} checks, ${exc} exceptions - ${pass ? 'PASS' : 'FAIL'}`);
+  console.log(`${name}: ${R.checks.length - failed.length}/${R.checks.length} checks, ${exc} exceptions - ${pass ? 'PASS' : 'FAIL'}` + (r.code !== 0 ? ` (child exit ${r.code})` : ''));
   for (const [n] of failed) console.log(`  FAILED: ${n}`);
 }
 console.log(allPass ? 'BROWSER TESTS: PASS' : 'BROWSER TESTS: FAIL');

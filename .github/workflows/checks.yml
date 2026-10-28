@@ -29,5 +29,7 @@ jobs:
           node-version: '22'
       - name: Locate Chrome
         run: echo "CHROME_BIN=$(command -v google-chrome || command -v chromium || command -v chromium-browser)" >> "$GITHUB_ENV"
+      - name: Runner self-test (verdicts: exit code, timeout, result block)
+        run: node tests/browser/selftest-runner.mjs
       - name: Browser tests (deterministic drives)
         run: node tests/browser/run.mjs

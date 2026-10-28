@@ -6,6 +6,7 @@
 python3 scripts/build-pages.py --check   # generated files match source; parity + SRI integrity
 node tests/sw.test.mjs                   # service worker fetch-strategy tests
 node tests/browser/run.mjs               # deterministic browser drives (second CI job)
+node tests/browser/selftest-runner.mjs   # proves the runner's own verdicts (exit code, timeout)
 ```
 
 The build check rebuilds `index.html` from `src/tracker-source.html` in
@@ -26,7 +27,12 @@ battery — same filenames, same test bodies; only harness plumbing differs
 `src/tracker-source.html` in headless Chromium (Chrome DevTools Protocol,
 Node built-ins only, no added dependencies), exercises it, and prints a
 JSON result block; `run.mjs` aggregates the blocks and fails if any check
-fails or any page exception occurs.
+fails, any page exception occurs, a drive exits with a non-zero code, or a
+drive overruns its timeout (300s default, `RUNNER_TIMEOUT_MS` overrides).
+`selftest-runner.mjs` feeds the runner fixture drives — including one that
+prints a passing block and then exits non-zero, and one that hangs — and
+asserts each verdict, so the runner cannot silently go back to trusting
+the printed block alone.
 
 Coverage:
 
@@ -45,6 +51,11 @@ Coverage:
   counter respects dismissed suggestions.
 - `drive89` — the Finish flow end to end: finish, history navigation, and
   the delete/clear pathways.
+- `drive114` — migration regression: a partially completed record in the
+  earlier bare sides format (and a street completed the street-level way)
+  loads with its state exact, gains no fabricated per-side timestamps,
+  keeps the work meter and pace inputs honest, and survives a
+  backup/restore round-trip unchanged.
 
 Running locally:
 

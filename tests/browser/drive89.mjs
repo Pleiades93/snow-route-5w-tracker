@@ -103,15 +103,18 @@ const R = { checks: [] };
 const ok = (name, cond) => R.checks.push([name, !!cond]);
 const ev = async (code) => evaluate(code);
 const exc = () => consoleLog.filter(c => c.type === 'EXCEPTION').length;
-const pollRead = async (expr, pred, ms = 9000) => {   // state-polling wait: fixed sleeps made T4 fail on a slow CI runner (the 8s undo window could lapse mid-jam); assertions unchanged, only the waiting is state-based. A read that errors (page mid-reload) counts as not-ready, never as a crash.
-  const t0 = Date.now(); let v;
+const pollRead = async (expr, pred, ms = 9000) => {   // state-polling wait: fixed sleeps made T4 fail on a slow CI runner (the 8s undo window could lapse mid-jam); assertions unchanged, only the waiting is state-based. Hardened per audit T-02 (2026-10-28): the sampled value resets every iteration; a read that errors (page mid-reload) or returns a non-string counts as not-ready instead of reusing the previous read; a timeout returns {} (explicit not-ready), never the last sampled state.
+  const t0 = Date.now();
   do {
-    const raw = await ev(expr);
-    if (typeof raw === 'string') { try { v = JSON.parse(raw); } catch { v = undefined; } }
+    let v;
+    try {
+      const raw = await ev(expr);
+      if (typeof raw === 'string') { try { v = JSON.parse(raw); } catch { v = undefined; } }
+    } catch { v = undefined; }
     if (v !== undefined && pred(v)) return v;
     await sleep(150);
   } while (Date.now() - t0 < ms);
-  return v === undefined ? {} : v;
+  return {};
 };
 const mark3 = () => ev(`(() => { const base = Date.now() - 3600000; runStart = base - 300000; saveStart();
   [['Velmar', 0], ['Mellings', 720000], ['Astona', 1500000]].forEach(([n, off]) => { doneSet.add(n); doneTimes[n] = new Date(base + off).toISOString(); doneVia[n] = 'tap'; });
