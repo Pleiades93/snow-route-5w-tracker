@@ -12,9 +12,14 @@ truck, in the dark, with gloves-adjacent tapping and spotty signal.
 ## What it does
 
 - All 34 route streets drawn from real OpenStreetMap centrelines: mains (cleaned
-  first) yellow, the rest red, done green. One action per street — the whole street
-  turns green, because the road plow leaves a windrow on both sides and both get
-  cleaned on the pass.
+  first) yellow, the rest red, done green. Streets are cut into stretches at
+  every junction and each stretch's two physical sides are marked separately —
+  the road plow leaves a windrow on both sides, and the two sides are rarely
+  cleaned in the same pass. Tap a stretch and use the arrow chips that pop up
+  on each side of the road; a cleaned side shows as a green edge line, and
+  consecutive finished stretches join into one continuous line. A street
+  counts done when every stretch is done on both sides, and the info panel
+  still completes a whole street in one tap.
 - Pace tracking against your last full clean, GPS coverage suggestions (a street
   that looks covered is *offered*, never auto-marked), a snow log with per-clean
   GPS paths, and full backup / restore.

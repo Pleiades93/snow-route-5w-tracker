@@ -4,6 +4,15 @@ User-facing changes and important reliability fixes. Versions are the
 in-app labels (header, under "Route 5W"). This changelog starts at v5.47;
 earlier history is in the git log.
 
+## v5.79 — 2026-10-27
+Consecutive same-side green edges now join across stretch boundaries: when the stretch next door has the same side done, a side's green edge runs untrimmed right to the shared boundary, so a run of finished stretches reads as one continuous green line down that side of the road. An isolated finished stretch keeps its small end trims and floats on its own, exactly as before. Verified by a full trace audit (drive111) over all 34 streets: every centreline point sits on the road's true geometry, every green edge rides at the intended 6 px offset on the correct physical side, joins measure closed, and no line overshoots its road.
+
+## v5.78 — 2026-10-27
+Andrew's live-test fixes to the stretches build: the arrow chips are smaller (40 px) and sit further off the road (40 px from the centreline) so they no longer crowd it; completed work reads more solid at rest — a both-sides stretch rests at 0.85 opacity and a green side edge at 0.9 (selected street still goes full 1.0, pending streets still rest at 0.58). Pace integration: every side now records the moment it was cleaned (pieceTimes, stored with the pieces as {p, t} under the same sides key; the v5.77 bare format still loads), and pace/ETA plus the progress meter run off side-metres — a side counts when it is cleaned, not when its street completes, so a street cleaned in two passes an hour apart no longer books all its metres at the second pass. doneM remains the road-metre figure (side-metres / 2), so totals, the last-clean verdict math and end-of-run numbers are unchanged; the meter's % is now work done (streets fully done still shown as the count beside it).
+
+## v5.77 — 2026-10-27
+Streets are cleaned in stretches × sides (Andrew's design): each street is cut at its junctions into stretches (87 route-wide), and each stretch has two physical sides. A completed side gets one green line hugging that side of the street; the street completes when every stretch is done both sides, and counts/pace/history stay street-level. Tapping a street selects the stretch under the tap and pops two arrow chips — fan-family white/slate circles with Set C glyphs — one on each physical side of the road; tapping a chip marks that side (chip turns into a green check; tap again to un-mark). The panel's Mark completed still completes the whole street. Piece state lives in the existing sides storage key (new format, validated per street); pre-v5.77 progress and old backups migrate automatically (a completed street = all its pieces done).
+
 ## v5.76 — 2026-10-27
 - The GPS follows the run (Andrew): pressing Start clean turns
   positioning on, and Finish turns it off - no manual toggling.

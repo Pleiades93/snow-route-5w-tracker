@@ -85,6 +85,15 @@
   }
   #selBtn.undo { background: #555; }
   #selBtn:disabled { background: #3a3f47; color: #999; }
+  /* v5.77: the side chips (the two arrows beside a selected stretch) are the
+     fan buttons' family - same white/slate circle, same float shadow, same
+     Set C filled glyph at the same 25px - so they read as the app's own
+     controls, not a foreign widget. A done side's chip turns street green. */
+  .sideChip.leaflet-div-icon { background: transparent; border: none; }
+  .sideChip .chipBtn { width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; background: #fff; color: #22262e; box-shadow: var(--shadow-float); display: flex; align-items: center; justify-content: center; padding: 0; touch-action: manipulation; }
+  body.night .sideChip .chipBtn { background: #22262e; color: #f2f4f8; }
+  .sideChip .chipBtn svg { width: 22px; height: 22px; flex: none; }
+  .sideChip.done .chipBtn { background: #2ecc71; color: #fff; }
   #sheet {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 1100;
     background: #1c1f27; color: #fff; max-height: 62%; box-shadow: 0 -6px 24px rgba(0,0,0,.4);
@@ -273,7 +282,7 @@
 <div id="map"></div>
 <div id="hud">
   <div class="row">
-    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.76</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
+    <div class="titleStack"><div class="title">Route 5W</div><div class="ver" id="ver">v5.79</div></div>   <!-- version label (Andrew): bump the #ver text with EVERY release -->
     <div class="count" id="count"></div>
     <div class="spacer"></div>
     <button id="listBtn">List</button>
@@ -352,7 +361,9 @@ const $ = id => document.getElementById(id);
 
 const SVG_MOON = '<svg data-ic="moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 const SVG_SUN = '<svg data-ic="sun" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/><rect x="11.1" y="1.3" width="1.8" height="3.4" rx="0.9"/><rect x="11.1" y="1.3" width="1.8" height="3.4" rx="0.9" transform="rotate(45 12 12)"/><rect x="11.1" y="1.3" width="1.8" height="3.4" rx="0.9" transform="rotate(90 12 12)"/><rect x="11.1" y="1.3" width="1.8" height="3.4" rx="0.9" transform="rotate(135 12 12)"/><rect x="11.1" y="1.3" width="1.8" height="3.4" rx="0.9" transform="rotate(180 12 12)"/><rect x="11.1" y="1.3" width="1.8" height="3.4" rx="0.9" transform="rotate(225 12 12)"/><rect x="11.1" y="1.3" width="1.8" height="3.4" rx="0.9" transform="rotate(270 12 12)"/><rect x="11.1" y="1.3" width="1.8" height="3.4" rx="0.9" transform="rotate(315 12 12)"/></svg>';
-const SVG_FLIP = '<svg data-ic="flip" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.68l-1.46 1.46C8.93 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM5 16l4-4H6c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.68l1.46-1.46C15.07 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4z" transform="translate(-0.5 0) scale(0.96)"/></svg>';   /* v5.68: Set C filled icons - JS swaps reuse these strings */
+const SVG_FLIP = '<svg data-ic="flip" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.68l-1.46 1.46C8.93 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM5 16l4-4H6c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.68l1.46-1.46C15.07 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4z" transform="translate(-0.5 0) scale(0.96)"/></svg>';   const SVG_ARROW = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>';   // v5.77: Material arrow_upward - same Set C filled family as the fan icons
+const SVG_CHECK = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';   // v5.77: Material check, same family
+/* v5.68: Set C filled icons - JS swaps reuse these strings */
 
 // ===== TOAST (on-page messages; native dialogs are banned) =====
 let toastTimer = null;
@@ -439,7 +450,7 @@ const covSet = {};
 function saveCov() { const o = {}; Object.keys(covSet).forEach(n => { if (covSet[n].size) o[n] = [...covSet[n]]; }); return lsSet(LS_COV_KEY, JSON.stringify(o)); }
 function saveTrail() { return lsSet(LS_TRAIL_KEY, JSON.stringify(trail)); }
 function saveAux() { lsSet(LS_NOTES_KEY, JSON.stringify(notes)); lsSet(LS_VIA_KEY, JSON.stringify(doneVia)); saveCov(); }
-function saveAll() { save(); saveTimes(); saveAux(); }
+function saveAll() { save(); saveTimes(); saveAux(); savePieces(); }
 
 // ===== TIME FORMATS =====
 const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -651,6 +662,9 @@ map.on('zoomend', layoutStreets);
 // marking was removed entirely. One option per street: Mark completed, and
 // the whole street turns green. The half-band geometry that rendered split
 // streets lived here and is gone.
+// v5.77 (Andrew's design, 2026-10-27) SUPERSEDES the v5.38 model: a street is
+// cleaned stretch by stretch, side by side - see the STRETCHES block below.
+// The panel's Mark completed still completes the whole street in one tap.
 // Road casing history: v5.27-v5.35 drew a dark slate edge under every street
 // (Option B) and swapped it for a white halo on the selected street. v5.36
 // (Andrew's pick from rendered options A-F, 2026-10-26): NO outline at all -
@@ -693,6 +707,197 @@ const JUNCTION_ENDS = {};
     JUNCTION_ENDS[n] = set;
   });
 })();
+// ===== STRETCHES x SIDES (v5.77, Andrew's design, 2026-10-27) =====
+// His real workflow never completes a street in one pass: he cleans one side
+// along a stretch, dips into a side street (both sides via the turnaround),
+// and picks up the missing sides of earlier stretches on later passes. So
+// the unit of work is the STRETCH (a street cut at every junction with
+// another cleanable street) x the SIDE (a PHYSICAL side of the street,
+// fixed on the map - never "left/right" from the driver's seat, which flips
+// with his direction of travel).
+// Geometry: each street's segments are stitched into one line (the stored
+// segments chain end-to-end, some reversed); cuts are the arc positions
+// where another street's line comes within 4 m, merged into intervals
+// (gaps under 15 m join; one cut per interval, at its midpoint) and dropped
+// within 12 m of the street's own ends (a street that ENDS on another is
+// not cut - the through street is). Reference features never cut. The
+// computation is deterministic on ROADS: 87 stretches / 174 side-pieces
+// (asserted by the harness drive; if ROADS ever changes, the counts move
+// and saved piece state must be re-derived - parseSides validates lengths).
+// Side A = the left of the stitched line's direction, side B = the right;
+// the stitch is deterministic, so a saved side is the same physical side
+// on every load. Rendering: the stretch keeps its normal street line and
+// colour; a done side gets ONE green line hugging that physical side
+// (screen-space offset, re-laid-out with the junction trims on zoom); an
+// undone side draws nothing; both sides done = the stretch turns green,
+// and a street is COMPLETE when every stretch is done both sides.
+// Marking: tapping a street selects the STRETCH under the tap and pops two
+// arrow chips, one on each physical side; tapping a chip toggles that side.
+const XYOf = p => [p[1] * MLNG, p[0] * MLAT];
+function segSegM(p1, p2, p3, p4) {   // segment-segment min distance (XY metres); returns [dist, t along p1->p2]
+  const d1x = p2[0] - p1[0], d1y = p2[1] - p1[1], d2x = p4[0] - p3[0], d2y = p4[1] - p3[1];
+  const rx = p1[0] - p3[0], ry = p1[1] - p3[1];
+  const a = d1x * d1x + d1y * d1y, e = d2x * d2x + d2y * d2y, f = d2x * rx + d2y * ry;
+  let sv = 0, tv = 0;
+  if (a <= 1e-12 && e <= 1e-12) return [Math.hypot(rx, ry), 0];
+  if (a <= 1e-12) { tv = Math.max(0, Math.min(1, f / e)); }
+  else {
+    const c = d1x * rx + d1y * ry;
+    if (e <= 1e-12) { sv = Math.max(0, Math.min(1, -c / a)); }
+    else {
+      const b = d1x * d2x + d1y * d2y, den = a * e - b * b;
+      sv = den > 1e-12 ? Math.max(0, Math.min(1, (b * f - c * e) / den)) : 0;
+      tv = (b * sv + f) / e;
+      if (tv < 0) { tv = 0; sv = Math.max(0, Math.min(1, -c / a)); }
+      else if (tv > 1) { tv = 1; sv = Math.max(0, Math.min(1, (b - c) / a)); }
+    }
+  }
+  return [Math.hypot(p1[0] + d1x * sv - (p3[0] + d2x * tv), p1[1] + d1y * sv - (p3[1] + d2y * tv)), sv];
+}
+function stitchLine(segs) {   // greedy chain with reversal; returns {line, startKey, endKey} in ORIGINAL segment indexing
+  const pool = segs.map((sg, si) => ({ pts: sg.slice(), si }));
+  const first = pool.shift();
+  let line = first.pts.slice(), startKey = first.si + ':0', endKey = first.si + ':1';
+  let guard = 0;
+  while (pool.length && guard++ < 200) {
+    const head = line[0], tail = line[line.length - 1];
+    let fi = -1, mode = 0;
+    for (let i = 0; i < pool.length; i++) {
+      const sg = pool[i].pts, s0 = sg[0], s1 = sg[sg.length - 1];
+      if (jDistM(tail, s0) < 0.5) { fi = i; mode = 1; break; }
+      if (jDistM(tail, s1) < 0.5) { fi = i; mode = 2; break; }
+      if (jDistM(head, s1) < 0.5) { fi = i; mode = 3; break; }
+      if (jDistM(head, s0) < 0.5) { fi = i; mode = 4; break; }
+    }
+    if (fi < 0) break;   // unchainable remainder: keep what chained (the drive asserts full coverage)
+    const it = pool.splice(fi, 1)[0], sg = it.pts;
+    if (mode === 1) { line.push(...sg.slice(1)); endKey = it.si + ':1'; }
+    else if (mode === 2) { line.push(...sg.slice().reverse().slice(1)); endKey = it.si + ':0'; }
+    else if (mode === 3) { line.unshift(...sg.slice(0, -1)); startKey = it.si + ':0'; }
+    else { line.unshift(...sg.slice().reverse().slice(0, -1)); startKey = it.si + ':1'; }
+  }
+  return { line, startKey, endKey };
+}
+const STRETCH = {};
+(function buildStretches() {
+  const stitched = {}, cums = {};
+  names.forEach(n => {
+    const st = stitchLine(ROADS[n]);
+    stitched[n] = st;
+    const cum = [0];
+    for (let i = 1; i < st.line.length; i++) cum.push(cum[i - 1] + jDistM(st.line[i - 1], st.line[i]));
+    cums[n] = cum;
+  });
+  names.forEach(n => {
+    const line = stitched[n].line, cum = cums[n], total = cum[cum.length - 1];
+    const raw = [];
+    names.forEach(m => {
+      if (m === n) return;
+      const B = stitched[m].line;
+      for (let i = 0; i < line.length - 1; i++) {
+        const p1 = XYOf(line[i]), p2 = XYOf(line[i + 1]);
+        const ax = Math.min(p1[0], p2[0]) - 4, bx = Math.max(p1[0], p2[0]) + 4, ay = Math.min(p1[1], p2[1]) - 4, by = Math.max(p1[1], p2[1]) + 4;
+        for (let j = 0; j < B.length - 1; j++) {
+          const p3 = XYOf(B[j]), p4 = XYOf(B[j + 1]);
+          if (Math.max(p3[0], p4[0]) < ax || Math.min(p3[0], p4[0]) > bx || Math.max(p3[1], p4[1]) < ay || Math.min(p3[1], p4[1]) > by) continue;
+          const r = segSegM(p1, p2, p3, p4);
+          if (r[0] <= 4) raw.push(cum[i] + r[1] * (cum[i + 1] - cum[i]));
+        }
+      }
+    });
+    raw.sort((x, y) => x - y);
+    const cuts = [];
+    raw.forEach(pos => {
+      const lastIv = cuts[cuts.length - 1];
+      if (lastIv && pos - lastIv[1] < 15) lastIv[1] = pos;
+      else cuts.push([pos, pos]);
+    });
+    const cutPts = cuts.map(iv => (iv[0] + iv[1]) / 2).filter(at => at > 12 && at < total - 12);
+    // slice the stitched line at the cut positions (interpolated points)
+    const parts = [];
+    let cur = [line[0]], acc = 0, ci = 0;
+    for (let i = 0; i < line.length - 1; i++) {
+      const legM = cum[i + 1] - cum[i];
+      while (ci < cutPts.length && cutPts[ci] >= acc && cutPts[ci] <= acc + legM) {
+        const t = legM ? (cutPts[ci] - acc) / legM : 0;
+        const cp = [line[i][0] + (line[i + 1][0] - line[i][0]) * t, line[i][1] + (line[i + 1][1] - line[i][1]) * t];
+        cur.push(cp); parts.push(cur); cur = [cp]; ci++;
+      }
+      cur.push(line[i + 1]); acc += legM;
+    }
+    parts.push(cur);
+    STRETCH[n] = { parts, lens: parts.map(pts => segLenM(pts)), startKey: stitched[n].startKey, endKey: stitched[n].endKey };
+  });
+})();
+// Piece state: pieces[name][stretchIdx] in 0..3 (bit 0 = side A, bit 1 =
+// side B), and pieceTimes[name][stretchIdx] = [timeA, timeB] (ISO or null) -
+// the moment each side was cleaned. Stored together under the v5.31-era
+// sides key as {p, t} (v5.78; the v5.77 bare pieces map still loads),
+// validated per street on load; a missing/invalid entry falls back to the
+// street-level record (complete street = all pieces done), so older
+// progress and backups migrate cleanly. Pieces are the truth; doneSet is
+// derived from them.
+let pieces = {}, pieceTimes = {};
+function freshPieces() { const o = {}; names.forEach(n => { o[n] = STRETCH[n].parts.map(() => 0); }); return o; }
+function blankTimes(n) { return STRETCH[n].parts.map(() => [null, null]); }
+function freshTimes() { const o = {}; names.forEach(n => { o[n] = blankTimes(n); }); return o; }
+function parseSides(raw, fallbackDone) {
+  // Accepts the v5.78 wrapped record {p, t} and the v5.77 bare pieces map.
+  const pRaw = isObj(raw) && isObj(raw.p) ? raw.p : raw;
+  const tRaw = isObj(raw) && isObj(raw.t) ? raw.t : null;
+  const p = freshPieces(), t = freshTimes();
+  names.forEach(n => {
+    const v = isObj(pRaw) ? pRaw[n] : null;
+    if (Array.isArray(v) && v.length === STRETCH[n].parts.length && v.every(x => Number.isInteger(x) && x >= 0 && x <= 3)) p[n] = v.slice();
+    else if (fallbackDone && fallbackDone.has(n)) p[n] = STRETCH[n].parts.map(() => 3);
+    const tv = tRaw ? tRaw[n] : null;
+    if (Array.isArray(tv) && tv.length === STRETCH[n].parts.length) {
+      tv.forEach((pair, i) => {
+        if (Array.isArray(pair)) [0, 1].forEach(sd => { if (typeof pair[sd] === 'string' && !isNaN(Date.parse(pair[sd]))) t[n][i][sd] = pair[sd]; });
+      });
+    }
+    // No recorded times for a COMPLETE street (v5.77 data, or a street
+    // migrated from the street-level record): its sides are attributed to
+    // its completion time - the honest reading of the old record. Partial
+    // pieces without times still count in the meter (workDoneM reads
+    // pieces, not times); markDone stamps them when their street completes.
+    if (p[n].every(x => x === 3) && doneTimes[n]) t[n].forEach(pair => { if (!pair[0]) pair[0] = doneTimes[n]; if (!pair[1]) pair[1] = doneTimes[n]; });
+  });
+  return { p, t };
+}
+function workDoneM() {   // side-metres cleaned so far: a done side counts its stretch's length
+  let m = 0;
+  names.forEach(n => { const p = pieces[n], L = STRETCH[n].lens; if (p && L) p.forEach((v, i) => { if (v & 1) m += L[i]; if (v & 2) m += L[i]; }); });
+  return m;
+}
+function workEvents() {   // sorted epoch-ms of every side's cleaning moment
+  const evs = [];
+  names.forEach(n => { const T = pieceTimes[n]; if (T) T.forEach(pair => { if (pair) pair.forEach(t => { const ms = Date.parse(t); if (!isNaN(ms)) evs.push(ms); }); }); });
+  return evs.sort((a, b) => a - b);
+}
+function streetComplete(n) { const p = pieces[n]; return !!p && p.length > 0 && p.every(v => v === 3); }
+function pieceStats(n) {
+  const p = pieces[n] || [];
+  let sides = 0, left = 0;
+  p.forEach(v => { sides += (v & 1) + ((v >> 1) & 1); if (v !== 3) left++; });
+  return { sides, total: p.length * 2, left };
+}
+function setAllPieces(n, v) { pieces[n] = STRETCH[n].parts.map(() => v); }
+function savePieces() { lsSet(LS_SIDES_KEY, JSON.stringify({ p: pieces, t: pieceTimes })); }
+(function initPieces() {
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(LS_SIDES_KEY) || 'null'); } catch (e) { raw = null; }
+  const parsedSides = parseSides(raw, doneSet); pieces = parsedSides.p; pieceTimes = parsedSides.t;
+  doneSet = new Set(names.filter(streetComplete));
+  Object.keys(doneTimes).forEach(n => { if (!doneSet.has(n)) delete doneTimes[n]; });
+  Object.keys(doneVia).forEach(n => { if (!doneSet.has(n)) delete doneVia[n]; });
+})();
+// Selection state for stretches/chips lives here (early) because renderPanel
+// and layoutStreets read it during boot.
+let selStretch = null;   // {name, idx, anchor: LatLng}
+let chipMarkers = [];
+function segLenM(pts) { let L = 0; for (let i = 1; i < pts.length; i++) L += jDistM(pts[i - 1], pts[i]); return L; }
+
 function trimToward(a, b, distM) {
   const len = jDistM(a, b) || 1, t = Math.min(distM, len * 0.9) / len;
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
@@ -720,15 +925,69 @@ function trimmedSegs(name, trimM) {
   });
 }
 const TRIM_PX = 7;
+function currentTrimM() { return TRIM_PX * 156543.03392 * JCOS / Math.pow(2, map.getZoom()); }
+// Offset a polyline in SCREEN space (the demo-proven pattern): project to
+// container points, shift each vertex along its averaged normal, convert
+// back. offPx > 0 = the left of the line's direction (side A).
+function offsetPts(pts, offPx) {
+  if (pts.length < 2) return pts;
+  const cs = pts.map(p => map.latLngToContainerPoint(p));
+  return cs.map((c, i) => {
+    const a = cs[Math.max(0, i - 1)], b = cs[Math.min(cs.length - 1, i + 1)];
+    let dx = b.x - a.x, dy = b.y - a.y;
+    const len = Math.hypot(dx, dy) || 1;
+    return map.containerPointToLatLng(L.point(c.x + (dy / len) * offPx, c.y + (-dx / len) * offPx));
+  });
+}
+// Lay out one street's stretch centrelines + green edges at the current zoom.
+// Centrelines: trimmed only at the street's own junction ends (as streets
+// have always been) and continuous across stretch boundaries - the street
+// reads as one street. Edges: additionally trimmed at stretch boundaries,
+// so a green edge breaks at junctions like the streets themselves do.
+function layoutStretchLines(n, trimM) {
+  const s = streets[n]; if (!s || !s.edges) return;
+  const st = STRETCH[n], ends = JUNCTION_ENDS[n], last = st.parts.length - 1;
+  // v5.79: side offsets are computed ONCE over the street's whole stitched
+  // line and sliced per stretch, so a boundary vertex gets ONE offset point
+  // shared by both stretches - joined edges meet exactly, even where the
+  // road bends at the boundary. (Per-stretch offsets put the same vertex in
+  // two places at a bend, and the "joined" line showed a notch.)
+  const full = [];
+  st.parts.forEach(p => p.forEach((pt, j) => { if (!full.length || j > 0) full.push(pt); }));
+  const offFull = [offsetPts(full, 6), offsetPts(full, -6)];
+  const starts = []; { let acc = 0; st.parts.forEach(p => { starts.push(acc); acc += p.length - 1; }); }
+  st.parts.forEach((pts, i) => {
+    let cp = pts;
+    if (i === 0 && ends && ends.has(st.startKey)) cp = cutHead(cp, Math.min(trimM, segLenM(cp) * 0.35));
+    if (i === last && ends && ends.has(st.endKey)) cp = cutTail(cp, Math.min(trimM, segLenM(cp) * 0.35));
+    s.lines[i].setLatLngs(cp);
+    const v = pieces[n][i];
+    [0, 1].forEach(side => {
+      const e = s.edges[i][side];
+      if (!(v & (1 << side)) || v === 3) { e.setLatLngs([]); return; }
+      let ep = offFull[side].slice(starts[i], starts[i] + pts.length);
+      if (i === 0 && ends && ends.has(st.startKey)) ep = cutHead(ep, Math.min(trimM, segLenM(ep) * 0.35));
+      if (i === last && ends && ends.has(st.endKey)) ep = cutTail(ep, Math.min(trimM, segLenM(ep) * 0.35));
+      // Consecutive same-side work joins up: no cut at a boundary whose
+      // neighbouring stretch has this same side done, so a run of finished
+      // stretches reads as ONE continuous green line down that side; an
+      // isolated finished stretch keeps its cuts and floats.
+      const prevDone = i > 0 && ((pieces[n][i - 1] >> side) & 1) === 1;
+      const nextDone = i < last && ((pieces[n][i + 1] >> side) & 1) === 1;
+      if (i > 0 && !prevDone) ep = cutHead(ep, Math.min(trimM, segLenM(ep) * 0.35));
+      if (i < last && !nextDone) ep = cutTail(ep, Math.min(trimM, segLenM(ep) * 0.35));
+      e.setLatLngs(ep);
+    });
+  });
+}
 function layoutStreets() {
-  const z = map.getZoom();
-  const mpp = 156543.03392 * JCOS / Math.pow(2, z);
-  const trimM = TRIM_PX * mpp;
+  const trimM = currentTrimM();
   names.forEach(n => {
     const s = streets[n], ts = trimmedSegs(n, trimM);
     s.casings.forEach(l => l.setLatLngs(ts));
-    s.lines.forEach(l => l.setLatLngs(ts));
+    layoutStretchLines(n, trimM);
   });
+  positionChips();
 }
 let swallowClickUntil = 0;   // set by the flipped-pan handler: swallow the click a pan ends with
 const streets = {};
@@ -738,10 +997,19 @@ names.forEach(name => {
   const segs = ROADS[name].map(pl => pl.map(p => [p[0], p[1]]));
   segs.forEach(s => s.forEach(ll => { b.extend(ll); allBounds.push(ll); }));
   const casing = L.polyline(segs, { color: '#ffffff', weight: 12, opacity: 0, interactive: false }).addTo(map);
-  const line = L.polyline(segs, { color: pendingColor(name), weight: 6, opacity: 0.95, interactive: false }).addTo(map);
+  // v5.77: the visible street is its stretch centrelines; each stretch also
+  // owns two (initially empty) green edge lines, one per physical side.
+  const centres = STRETCH[name].parts.map(pts => L.polyline(pts, { color: pendingColor(name), weight: 6, opacity: 0.95, interactive: false }).addTo(map));
+  const edges = STRETCH[name].parts.map(() => [0, 1].map(() => L.polyline([], { color: GREEN, weight: 4, opacity: 0.9, interactive: false }).addTo(map)));
   const hit = L.polyline(segs, { color: '#fff', weight: 24, opacity: 0, bubblingMouseEvents: false }).addTo(map);
-  hit.on('click', e => { if (Date.now() < swallowClickUntil) return; select(nearestStreet(tapLatLng(e.latlng)) || name); });
-  streets[name] = { casings: [casing], lines: [line], bounds: b, segs };
+  hit.on('click', e => {
+    if (Date.now() < swallowClickUntil) return;
+    const ll = tapLatLng(e.latlng);
+    const n = nearestStreet(ll) || name;
+    const st = nearestStretch(n, ll);
+    if (st) selectStretch(n, st.idx, st.anchor); else select(n);
+  });
+  streets[name] = { casings: [casing], lines: centres, edges, bounds: b, segs };
 });
 function tapLatLng(ll) {
   if (!flipped) return ll;
@@ -757,6 +1025,22 @@ function nearestStreet(ll) {
       if (d < bd) { bd = d; best = n; }
     }
   }));
+  return best;
+}
+function nearestStretch(name, ll) {
+  const pt = map.latLngToLayerPoint(ll);
+  let best = null;
+  STRETCH[name].parts.forEach((pts, idx) => {
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = map.latLngToLayerPoint(pts[i]), b = map.latLngToLayerPoint(pts[i + 1]);
+      const d = L.LineUtil.pointToSegmentDistance(pt, a, b);
+      if (!best || d < best.d) {
+        const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1;
+        let t = ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / L2; t = Math.max(0, Math.min(1, t));
+        best = { idx, d, anchor: map.layerPointToLatLng(L.point(a.x + dx * t, a.y + dy * t)) };
+      }
+    }
+  });
   return best;
 }
 Object.values(REFERENCE).forEach(polys => polys.forEach(pl => pl.forEach(p => allBounds.push([p[0], p[1]]))));
@@ -829,15 +1113,26 @@ let selected = null;
 function styleStreet(name) {
   const s = streets[name], done = doneSet.has(name);
   const sel = name === selected;
-  s.lines.forEach(l => l.setStyle(done
-    ? { color: GREEN, weight: 8, opacity: sel ? 1 : 0.62 }
-    : { color: pendingColor(name), weight: 6, opacity: sel ? 1 : 0.58 }));
+  // v5.77: per-stretch styling - a stretch whose two sides are done is green;
+  // the whole street goes weight 8 only when the STREET is complete (the
+  // pre-v5.77 done look). Vibrancy selection unchanged: selected = full
+  // opacity, resting streets muted.
+  s.lines.forEach((l, i) => {
+    const both = pieces[name][i] === 3;
+    l.setStyle({ color: both ? GREEN : pendingColor(name), weight: done ? 8 : 6, opacity: sel ? 1 : (both ? 0.85 : 0.58) });
+  });
+  if (s.edges) s.edges.forEach(pair => pair.forEach(e => e.setStyle({ opacity: sel ? 1 : 0.9 })));
   s.casings.forEach(c => c.setStyle({ opacity: 0 }));   // v5.36: casing never drawn (pick B)
 }
 
 function updateCount() {
-  $('count').textContent = doneSet.size + ' of ' + TOTAL + ' completed \u00b7 ' + (TOTAL ? Math.round(doneSet.size / TOTAL * 100) : 0) + '%';   // v5.48: percentage at a glance
-  $('barFill').style.width = (TOTAL ? (doneSet.size / TOTAL * 100) : 0) + '%';
+  // v5.78: the meter measures WORK (side-metres cleaned of the route's total
+  // side-metres), so it moves as sides are marked - the street count beside
+  // it still credits only fully completed streets. Endpoints unchanged:
+  // 0% on a fresh board, 100% when every side of every street is done.
+  const pct = totalLen ? Math.round(workDoneM() / 2 / totalLen * 100) : 0;
+  $('count').textContent = doneSet.size + ' of ' + TOTAL + ' completed \u00b7 ' + pct + '%';
+  $('barFill').style.width = pct + '%';
   updateStats();
 }
 function renderPanel() {
@@ -858,7 +1153,11 @@ function renderPanel() {
       (t ? ' (' + fmtAgo(t) + ')' : '') + (doneVia[selected] === 'gps' ? ' \u00b7 GPS' : '');
     btn.textContent = 'Mark not done'; btn.className = 'undo';
   } else {
-    stEl.innerHTML = '<span class="dot" style="background:' + pendingColor(selected) + '"></span>Not done yet';
+    const ps = pieceStats(selected);
+    let stTxt = 'Not done yet';
+    if (ps.sides) stTxt = 'Partly done \u2014 ' + ps.sides + ' of ' + ps.total + ' sides \u00b7 ' + ps.left + (ps.left === 1 ? ' stretch' : ' stretches') + ' to go';
+    if (selStretch && selStretch.name === selected) stTxt += ' \u00b7 Stretch ' + (selStretch.idx + 1) + ' of ' + pieces[selected].length + ' \u2014 tap an arrow to mark its side';
+    stEl.innerHTML = '<span class="dot" style="background:' + pendingColor(selected) + '"></span>' + stTxt;
     btn.textContent = '\u2713 Mark completed'; btn.className = '';
   }
 }
@@ -868,6 +1167,7 @@ function renderPanel() {
 function refreshAll() { names.forEach(styleStreet); renderPanel(); updateCount(); renderList(); }
 function select(name) {
   closePace();
+  selStretch = null; hideChips();
   const prev = selected;
   selected = name;
   if (prev && streets[prev]) styleStreet(prev);
@@ -879,6 +1179,7 @@ function deselect() {
   if (!selected) return;
   const prev = selected;
   selected = null;
+  selStretch = null; hideChips();
   styleStreet(prev);
   renderPanel();
   $('info').classList.add('hidden');
@@ -887,13 +1188,93 @@ map.on('click', () => {
   if (Date.now() < swallowClickUntil) return;   // a flipped pan just ended \u2014 not a tap
   deselect();
 });
+// ===== SIDE CHIPS (v5.77, Andrew's design) =====
+// Selecting a stretch pops two arrow chips, one on each PHYSICAL side of
+// the road at the tap point; a chip toggles its own side. The chips are
+// Leaflet markers (they ride the map, flip included) whose latlngs are
+// recomputed from screen space on zoom, so they always sit 28 px out from
+// the centreline. A done side's chip turns green with a check; tapping it
+// again un-marks that side.
+function stretchNormal(sel) {
+  const pts = STRETCH[sel.name].parts[sel.idx];
+  const a = map.latLngToContainerPoint(sel.anchor);
+  let bi = 0, bd = Infinity;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const d = L.LineUtil.pointToSegmentDistance(a, map.latLngToContainerPoint(pts[i]), map.latLngToContainerPoint(pts[i + 1]));
+    if (d < bd) { bd = d; bi = i; }
+  }
+  const p1 = map.latLngToContainerPoint(pts[bi]), p2 = map.latLngToContainerPoint(pts[bi + 1]);
+  let dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const len = Math.hypot(dx, dy) || 1;
+  return [dy / len, -dx / len];   // left normal in screen coords (y down)
+}
+function chipLatLng(sel, side) {
+  const size = map.getSize();
+  const a = map.latLngToContainerPoint(sel.anchor), nrm = stretchNormal(sel);
+  const sgn = side === 0 ? 1 : -1;
+  let x = a.x + nrm[0] * 40 * sgn, y = a.y + nrm[1] * 40 * sgn;
+  x = Math.max(22, Math.min(size.x - 22, x));   // a chip never hangs off the map's edge
+  y = Math.max(22, Math.min(size.y - 22, y));
+  return map.containerPointToLatLng(L.point(x, y));
+}
+function chipIcon(sel, side) {
+  const doneSide = !!((pieces[sel.name][sel.idx] >> side) & 1);
+  let inner;
+  if (doneSide) inner = SVG_CHECK;
+  else {
+    const nrm = stretchNormal(sel), sgn = side === 0 ? 1 : -1;
+    const deg = Math.atan2(nrm[1] * sgn, nrm[0] * sgn) * 180 / Math.PI + 90;   // the glyph points up at 0deg
+    inner = '<span style="display:flex;transform:rotate(' + deg.toFixed(1) + 'deg)">' + SVG_ARROW + '</span>';
+  }
+  return L.divIcon({ className: 'sideChip' + (doneSide ? ' done' : ''), html: '<div class="chipBtn">' + inner + '</div>', iconSize: [40, 40], iconAnchor: [20, 20] });
+}
+function hideChips() { chipMarkers.forEach(mk => map.removeLayer(mk)); chipMarkers = []; }
+function showChips() {
+  hideChips();
+  if (!selStretch) return;
+  const sel = selStretch;
+  [0, 1].forEach(side => {
+    const mk = L.marker(chipLatLng(sel, side), { icon: chipIcon(sel, side), interactive: true, keyboard: false, bubblingMouseEvents: false }).addTo(map);
+    mk.on('click', () => { if (tapGuard('chip' + side)) return; togglePiece(sel.name, sel.idx, side); });
+    chipMarkers.push(mk);
+  });
+}
+function positionChips() {
+  if (!selStretch || chipMarkers.length !== 2) return;
+  chipMarkers.forEach((mk, side) => mk.setLatLng(chipLatLng(selStretch, side)));
+}
+function selectStretch(name, idx, anchor) {
+  select(name);
+  selStretch = { name, idx, anchor };
+  renderPanel();
+  showChips();
+}
+function togglePiece(name, idx, side) {
+  const was = doneSet.has(name);
+  pieces[name][idx] ^= (1 << side);
+  // v5.78: every side carries the moment it was cleaned (or null) - the
+  // pace and the meter run off these stamps, not the street's completion.
+  if ((pieces[name][idx] >> side) & 1) pieceTimes[name][idx][side] = new Date().toISOString();
+  else pieceTimes[name][idx][side] = null;
+  const now = streetComplete(name);
+  if (now && !was) { markDone(name, 'tap'); return; }
+  if (!now && was) {
+    doneSet.delete(name); delete doneTimes[name]; delete doneVia[name];
+    showToast('Unmarked ' + name);
+  }
+  finishChange(name);
+}
 function finishChange(n) {
+  layoutStretchLines(n, currentTrimM());
   styleStreet(n); renderPanel(); updateCount(); renderList(); saveAll(); syncWake();
+  if (selStretch && selStretch.name === n) showChips();
   if (suggestShown && doneSet.has(suggestShown)) { suggestShown = null; showSuggest(); }
 }
 function markDone(n, via, at) {
   clearUndo();
+  setAllPieces(n, 3);
   const mts = at || new Date().toISOString();
+  pieceTimes[n].forEach(pair => { if (!pair[0]) pair[0] = mts; if (!pair[1]) pair[1] = mts; });   // v5.78: sides already marked keep their real times; the rest inherit the completion moment
   doneSet.add(n); doneTimes[n] = mts; doneVia[n] = via;
   if (doneSet.size === 1) hideBakNudge();   // a new run starting retires the backup prompt - finishing it asks again
   showToast('\u2713 ' + n + ' \u00b7 ' + fmtClock(new Date(doneTimes[n])) + (via === 'gps' ? ' (GPS)' : '') +
@@ -905,6 +1286,8 @@ function toggleDone() {
   const n = selected;
   if (doneSet.has(n)) {
     clearUndo();
+    setAllPieces(n, 0);
+    pieceTimes[n] = blankTimes(n);
     doneSet.delete(n); delete doneTimes[n]; delete doneVia[n]; dismissed.add(n);
     showToast('Unmarked ' + n);
     finishChange(n);
@@ -1324,6 +1707,7 @@ resetBtn.onclick = () => {
     clearUndo();
     history = history.filter(h => h.at !== snap.at);
     doneSet = new Set(Object.keys(snap.items));
+    if (snap.sides) { const ps = parseSides(snap.sides, doneSet); pieces = ps.p; pieceTimes = ps.t; }
     doneTimes = {};
     Object.keys(snap.items).forEach(n => { if (snap.items[n]) doneTimes[n] = snap.items[n]; });
     doneVia = Object.assign({}, snap.via || {});
@@ -1362,7 +1746,7 @@ function performReset() {
   let snap = null;
   if (doneSet.size || Object.keys(notes).length) {
     const ts = [...doneSet].map(n => Date.parse(doneTimes[n])).filter(t => !isNaN(t)).sort((a, b) => a - b);
-    snap = { at: new Date().toISOString(), items: {}, via: Object.assign({}, doneVia), notes: JSON.parse(JSON.stringify(notes)),
+    snap = { at: new Date().toISOString(), items: {}, via: Object.assign({}, doneVia), notes: JSON.parse(JSON.stringify(notes)), sides: JSON.parse(JSON.stringify({ p: pieces, t: pieceTimes })),
              km: ts.length ? +trailKm(ts[0]).toFixed(1) : 0, startedAt: (runStart && ts.length && runStart <= ts[0]) ? new Date(runStart).toISOString() : (ts.length ? new Date(ts[0]).toISOString() : null) };
     doneSet.forEach(n => { snap.items[n] = doneTimes[n] || null; });
     const sMs = Date.parse(snap.startedAt);
@@ -1389,7 +1773,7 @@ function performReset() {
   // Keep the coverage state Undo will need, before it is cleared below.
   const covCopy = {}; Object.keys(covSet).forEach(k => { covCopy[k] = [...covSet[k]]; });
   resetUndoCov = { cov: covCopy, dis: [...dismissed] };
-  doneSet = new Set(); doneTimes = {}; doneVia = {}; notes = {};
+  doneSet = new Set(); doneTimes = {}; doneVia = {}; notes = {}; pieces = freshPieces(); pieceTimes = freshTimes();
   runStart = 0; saveStart();
   Object.keys(covSet).forEach(k => delete covSet[k]);
   dismissed.clear(); Object.keys(sugAt).forEach(k => delete sugAt[k]);
@@ -1781,9 +2165,17 @@ function refRun() {
   return any;
 }
 function paceInfo() {
-  const ts = [...doneSet].map(n => Date.parse(doneTimes[n])).filter(t => !isNaN(t)).sort((x, y) => x - y);
-  let doneM = 0; doneSet.forEach(n => doneM += streetLen[n] || 0);
-  const cur = { count: doneSet.size, first: ts.length ? ts[0] : 0, last: ts.length ? ts[ts.length - 1] : 0, doneM: doneM, leftM: Math.max(0, totalLen - doneM) };
+  // v5.78: pace runs off the PIECE record, not street completions. A side's
+  // metres count at the moment the side was cleaned (pieceTimes), so a
+  // street cleaned in two passes an hour apart books its work when the work
+  // happened - no lump-sum credit at the second pass. doneM stays the
+  // road-metre figure every display already uses (side-metres / 2), so
+  // totals, the verdict math and the end-of-run numbers are unchanged;
+  // only the mid-run timing is honest.
+  const ts = workEvents();
+  const workM = workDoneM();
+  const doneM = workM / 2;
+  const cur = { count: doneSet.size, workM: workM, first: ts.length ? ts[0] : 0, last: ts.length ? ts[ts.length - 1] : 0, doneM: doneM, leftM: Math.max(0, totalLen - doneM) };
   cur.spreadMs = cur.last - cur.first;
   // The clock starts at runStart when he tapped Start clean \u2014 unless that stamp is
   // impossible (after the first mark) or stale (the gap to the first mark, or to now when
@@ -1791,11 +2183,11 @@ function paceInfo() {
   // falls back to the first completed street, exactly as before.
   const startGap = (cur.first || Date.now()) - runStart;
   cur.start = (runStart && runStart <= (cur.first || Infinity) && startGap < 18 * 3600 * 1000) ? runStart : cur.first;
-  cur.elapsedMs = cur.count ? cur.last - cur.start : 0;
-  cur.msPerM = (cur.count >= 1 && cur.elapsedMs > 0 && doneM > 0) ? cur.elapsedMs / doneM : 0;
+  cur.elapsedMs = (cur.count > 0 || workM > 0) ? cur.last - cur.start : 0;
+  cur.msPerM = (workM > 0 && cur.elapsedMs > 0 && doneM > 0) ? cur.elapsedMs / doneM : 0;
   const ref = refRun();
   let etaMs = 0, basis = '';
-  if (cur.count > 0 && cur.count < TOTAL) {
+  if ((cur.count > 0 || workM > 0) && cur.count < TOTAL) {
     if (cur.msPerM) { etaMs = Date.now() + cur.leftM * cur.msPerM; basis = 'your pace today'; }
     else if (ref) { etaMs = Date.now() + cur.leftM * ref.msPerM; basis = 'last clean\u2019s pace'; }
   }
@@ -1814,7 +2206,7 @@ function updateStats() {
   if (!P.cur.count && !P.ref && !P.cur.start) { el.classList.add('hidden'); return; }
   let txt;
   if (P.cur.count >= TOTAL) txt = 'Started ' + fmtClock(new Date(P.cur.start)) + ' \u00b7 finished ' + fmtClock(new Date(P.cur.last)) + ' \u00b7 ' + fmtDur(P.cur.last - P.cur.start);
-  else if (P.cur.count) {
+  else if (P.cur.count || P.cur.workM > 0) {
     txt = 'Started ' + fmtClock(new Date(P.cur.start)) + ' \u00b7 ' + fmtDur(Date.now() - P.cur.start);
     if (P.etaMs) txt += ' \u00b7 ETA ' + fmtClock(new Date(P.etaMs));
   } else if (P.cur.start) txt = 'Started ' + fmtClock(new Date(P.cur.start)) + ' \u00b7 ' + fmtDur(Date.now() - P.cur.start) + ' on the clock';
@@ -1836,7 +2228,7 @@ function renderPace(P) {
     rows.push('<div class="psec">This run</div>');
     rows.push(row('Started', fmtClock(new Date(P.cur.start))));
     rows.push(row('Elapsed', fmtDur(Date.now() - P.cur.start)));
-    if (P.cur.count) {
+    if (P.cur.count || P.cur.workM > 0) {
       rows.push(row('Streets done', P.cur.count + ' of ' + TOTAL));
       rows.push(row('Road done', km1(P.cur.doneM) + ' of ' + km1(totalLen) + ' km (' + Math.round(P.cur.doneM / totalLen * 100) + '%)'));
       const gkm = trail.length > 1 ? trailKm(P.cur.first) : 0;
@@ -1845,7 +2237,7 @@ function renderPace(P) {
       else if (P.etaMs) rows.push(row('ETA', fmtClock(new Date(P.etaMs)) + ' (' + P.basis + ')'));
       else rows.push('<div class="phint">ETA needs one more street marked to start projecting.</div>');
     } else {
-      rows.push('<div class="phint">On the clock \u2014 mark each street as you finish it; your ETA and pace run from this start time.</div>');
+      rows.push('<div class="phint">On the clock \u2014 mark sides and streets as you clean them; your ETA and pace run from this start time.</div>');
       rows.push('<button class="ghost pwide" id="cancelStartBtn">Cancel start</button>');
     }
   }
