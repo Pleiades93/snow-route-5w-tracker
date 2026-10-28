@@ -113,9 +113,10 @@ those are verified locally per release and, for layout, on device.
 
 ## Honest limitations
 
-- A true service-worker upgrade-lifecycle test (old worker handing over to
-  a new one on a real origin) has **not** been run — the local rig cannot
-  host one. Upgrade behaviour rests on the versioned-cache design, code
-  review, and on-device checks after each release.
+- The service-worker upgrade lifecycle is covered by `drive117` on a
+  local origin in headless Chromium. The same handoff on the real
+  Pages origin has **not** been run automatically — there it still
+  rests on the versioned-cache design and on-device checks after
+  each release.
 - iOS installed-app behaviour (home-screen install, the standalone top
   band, update flow) is verified on a real device; no emulator covers it.
